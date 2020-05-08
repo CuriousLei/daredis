@@ -28,4 +28,7 @@ class SkipListLevel{
     public void setSpan(int span) {
         this.span = span;
     }
+    public void modifySpan(int offset) {
+        this.span = this.span  + offset;
+    }
 }

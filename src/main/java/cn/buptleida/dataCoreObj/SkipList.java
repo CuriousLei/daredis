@@ -1,5 +1,6 @@
 package cn.buptleida.dataCoreObj;
 
+import java.io.StringReader;
 import java.util.Random;
 
 public class SkipList<T extends Comparable<? super T>> {
@@ -12,22 +13,16 @@ public class SkipList<T extends Comparable<? super T>> {
     private long length;
 
     //最大结点的层数
-    private int maxLevel;
+    private int maxLevelHeight;
 
     public SkipList() {
         SkipListNode<T> node = new SkipListNode<>(null);
         this.header = node;
         this.tail = node;
         this.length = 0;
-        this.maxLevel = 0;
+        this.maxLevelHeight = 0;
     }
 
-    /**
-     * 插入新节点
-     *
-     * @param obj
-     * @return
-     */
     // public boolean insert(double score, T obj) {
     //
     //     int levelHeight = getRandomHeight();
@@ -50,19 +45,27 @@ public class SkipList<T extends Comparable<? super T>> {
     //     node.setScore(span+backNode.getScore());
     //     return true;
     // }
-    public SkipListNode slInsert(double score, T obj) {
+
+    /**
+     * 插入新节点
+     *
+     * @param score && obj
+     * @return 插入的节点
+     */
+    public SkipListNode zslInsert(double score, T obj) {
         int levelHeight = getRandomHeight();
+        if(score==2.6) System.out.println(levelHeight);
         SkipListNode<T> target = new SkipListNode<>(obj, levelHeight, score);
         //设置一个update[]，大小为max(levelHeight,maxLevel)，对于新节点来说，update[i] 表示将新节点第i层插入到update[i]节点后面
-        SkipListNode[] update = new SkipListNode[Math.max(levelHeight, maxLevel)];
+        SkipListNode[] update = new SkipListNode[Math.max(levelHeight, maxLevelHeight)];
         int[] rank = new int[update.length];//记录每一个update节点的排位
         int i = update.length - 1;
-        if (levelHeight > maxLevel) {
-            for (; i >= maxLevel; --i) {
+        if (levelHeight > maxLevelHeight) {
+            for (; i >= maxLevelHeight; --i) {
                 update[i] = header;
                 rank[i] = 0;
             }
-            maxLevel = levelHeight;
+            maxLevelHeight = levelHeight;
         }
         for (; i >= 0; --i) {
 
@@ -81,6 +84,7 @@ public class SkipList<T extends Comparable<? super T>> {
 
         //当maxLevel>levelHeight，前面部分节点的span值加1，因为多出来一个新节点
         for (i = update.length - 1; i >= levelHeight; --i) {
+            if (update[i].getLevel()[i].getForward() == null) continue;
             int span = update[i].getLevel()[i].getSpan();
             update[i].getLevel()[i].setSpan(++span);
         }
@@ -115,9 +119,51 @@ public class SkipList<T extends Comparable<? super T>> {
 
     }
 
+    /**
+     * 删除节点
+     * @param obj
+     * @return 删除的节点(若节点不存在则返回null)
+     */
+    public SkipListNode zslDelete(double score, T obj) {
+        SkipListNode[] update = new SkipListNode[maxLevelHeight];
+        SkipListNode<T> node = header;
+        for (int i = maxLevelHeight - 1; i >= 0; --i) {
+            SkipListNode<T> next = node.getLevel()[i].getForward();
+            //遍历得到与target最接近的节点
+            while (next != null && (score > next.getScore() || score == next.getScore() && next.getObj().compareTo(obj) < 0)) {
+                node = next;
+                next = node.getLevel()[i].getForward();
+            }
+            update[i] = node;
+        }
+        //待删除的目标节点
+        SkipListNode<T> target = update[0].getLevel()[0].getForward();
+        if(target==null) return null;
+
+        for (int i = maxLevelHeight - 1; i >= 0; --i) {
+            SkipListLevel current = update[i].getLevel()[i];
+            SkipListNode<T> next = current.getForward();
+            if (next == null) continue;
+            if (next != target) {
+                current.modifySpan(-1);
+                continue;
+            }
+            current.setForward(target.getLevel()[i].getForward());
+            if(current.getForward()!=null)
+                current.modifySpan(target.getLevel()[i].getSpan() - 1);
+            else
+                current.setSpan(0);
+        }
+        length--;
+        while(header.getLevel()[maxLevelHeight-1].getSpan()==0){
+            maxLevelHeight--;
+        }
+        return target;
+    }
+
 
     /**
-     * 获取随机的层高度
+     * 使用幂次定律获取随机层高度
      *
      * @return
      */
@@ -132,34 +178,127 @@ public class SkipList<T extends Comparable<? super T>> {
         return i;
     }
 
+    /**
+     * 给定一个分值范围，如果至少有一个节点的分值在这范围之内则返回true，否则false
+     * @return
+     */
+    public boolean zslIsInRange(double fromScore, double toScore) {
+        if (header.getScore() > toScore || tail.getScore() < fromScore) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 根据分值范围，返回第一个符合范围的节点
+     * @param fromScore
+     * @param toScore
+     * @return
+     */
+    public SkipListNode<T> zslFirstInRange(double fromScore, double toScore, SkipListNode<T> node, int k) {
+        if (!zslIsInRange(fromScore, toScore)) {
+            return null;
+        }
+
+        SkipListNode<T> next = node.getLevel()[k].getForward();
+
+        if (next == null || next.getScore() >= fromScore) {
+            if (k == 0) return next != null && next.getScore() > toScore ? null : next;
+            return zslFirstInRange(fromScore, toScore, node, k - 1);
+        }
+        return zslFirstInRange(fromScore, toScore, next, k);
+    }
+
+    /**
+     * 根据分值范围，返回最后一个符合范围的节点
+     *
+     * @param fromScore
+     * @param toScore
+     * @return
+     */
+    public SkipListNode<T> zslLastInRange(double fromScore, double toScore, SkipListNode<T> node, int k) {
+        if (!zslIsInRange(fromScore, toScore)) {
+            return null;
+        }
+
+        SkipListNode<T> next = node.getLevel()[k].getForward();
+
+        if (next == null || next.getScore() > toScore) {
+            if (k == 0) return next != null && next.getScore() < fromScore ? null : node;
+            return zslLastInRange(fromScore, toScore, node, k - 1);
+        }
+        return zslLastInRange(fromScore, toScore, next, k);
+    }
+
+    public SkipListNode<T> searchByScore(double score, SkipListNode<T> node, int k) {
+        return zslFirstInRange(score, score, node, k);
+    }
+
+    /**
+     * 测试
+     * @param args
+     */
     public static void main(String[] args) {
 
         SkipList<Integer> skipList = new SkipList<>();
-        skipList.slInsert(1.2, 32);
-        skipList.slInsert(1.6, 30);
-        skipList.slInsert(1.4, 30);
-        skipList.slInsert(1.4, 30);
+        skipList.zslInsert(1.2, 32);
+        skipList.zslInsert(1.6, 30);
+        skipList.zslInsert(1.4, 36);
+        skipList.zslInsert(1.4, 30);
+        // skipList.zslInsert(2.6, 32);
+        // skipList.zslInsert(2.6, 30);
+        // skipList.zslInsert(2.6, 36);
+        // skipList.zslInsert(2.6, 30);
+         skipList.zslInsert(2.6, 56);
+        skipList.zslInsert(3.6, 119);
+        printSkipList(skipList);
+
+        //SkipListNode<Integer> temp = skipList.searchByScore(2.6, skipList.header, skipList.maxLevelHeight - 1);
+        // SkipListNode<Integer> tempFirst = skipList.zslFirstInRange(1.2, 2.7, skipList.header,
+        //         skipList.maxLevelHeight - 1);
+        // SkipListNode<Integer> tempLast = skipList.zslLastInRange(1.36, 1.6, skipList.header,
+        //         skipList.maxLevelHeight - 1);
+        // printNode(tempFirst);
+        // printNode(tempLast);
+
+        skipList.zslDelete(2.6,56);
         printSkipList(skipList);
 
     }
+
 
     /**
      * 输出整个跳表
      */
     private static void printSkipList(SkipList<Integer> skipList) {
         System.out.println("length:" + skipList.length);
-        System.out.println("maxLevel:" + skipList.maxLevel);
+        System.out.println("maxLevel:" + skipList.maxLevelHeight);
         SkipListNode<Integer> temp = skipList.header;
         while (temp != null) {
             System.out.println();
             System.out.print(" score:" + temp.getScore());
             System.out.print(" data:" + temp.getObj());
             System.out.print(" LEVELS: ");
-            for (int i = 0; i < temp.getLevel().length && i < skipList.maxLevel; i++) {
+            for (int i = 0; i < temp.getLevel().length && i < skipList.maxLevelHeight; i++) {
                 System.out.print(" level" + i + ":" + temp.getLevel()[i].getSpan());
             }
 
             temp = temp.getLevel()[0].getForward();
+        }
+        System.out.println();
+    }
+
+    /**
+     * 输出节点信息
+     * @param node
+     */
+    private static void printNode(SkipListNode<Integer> node) {
+        System.out.println();
+        System.out.print(" score:" + node.getScore());
+        System.out.print(" data:" + node.getObj());
+        System.out.print(" LEVELS: ");
+        for (int i = 0; i < node.getLevel().length; i++) {
+            System.out.print(" level" + i + ":" + node.getLevel()[i].getSpan());
         }
     }
 }
