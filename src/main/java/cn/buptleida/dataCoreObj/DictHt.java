@@ -87,6 +87,23 @@ class DictHt<K, V> {
             dict.dictExpandIfNeed(2 * size);
         }
     }
+    Entry<K, V> delete(K key,int index){
+        // Entry<K, V> e = table[index];
+
+        for (Entry<K, V> e = table[index],prev = e; e != null; prev=e,e = e.next) {
+            if (key == e.key || key.equals(e.key)) {
+                if(e==prev){
+                    table[index] = e.next;
+                }else{
+                    prev.next = e.next;
+                }
+                used--;
+                return e;
+            }
+        }
+        return null;
+    }
+
 
     Entry<K, V> containsKey(K key, int index) {
         for (Entry<K, V> e = table[index]; e != null; e = e.next) {

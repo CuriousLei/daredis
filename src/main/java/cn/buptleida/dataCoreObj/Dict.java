@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 public class Dict<K, V> implements DictHt.DictCallBack {
     static final int DICT_HT_INITIAL_SIZE = 1 << 2;
 
+    static final int MAXIMUM_CAPACITY = 1 << 30;
+
     //两个哈希表
     DictHt<K, V> ht;
     DictHt<K, V> htBac;
@@ -101,6 +103,19 @@ public class Dict<K, V> implements DictHt.DictCallBack {
     public V replace(K key, V value) {
         return null;
     }
+    public V delete(K key){
+        dictRehash(1);
+
+        DictHt.Entry<K, V> e;
+        int hash = hash(key);
+        if((e = ht.delete(key,getIndex(hash, ht.getSize())))!=null)
+            return e.getValue();
+        if(treHashIdx==-1)
+            return null;
+        if((e = htBac.delete(key,getIndex(hash, htBac.getSize())))!=null)
+            return e.getValue();
+        return null;
+    }
 
     private void dictRehash(int n) {
         if (!isRehashing()) return;
@@ -135,9 +150,10 @@ public class Dict<K, V> implements DictHt.DictCallBack {
     public void dictExpandIfNeed(int length) {
         if (isRehashing()) return;
 
+        int newSize = roundUpToPowerOf2(length);
         //开始expand
-        htBac.table = new DictHt.Entry[length];
-        htBac.setSize(length);
+        htBac.table = new DictHt.Entry[newSize];
+        htBac.setSize(newSize);
         treHashIdx = 0;
 
     }
@@ -145,6 +161,16 @@ public class Dict<K, V> implements DictHt.DictCallBack {
     @Override
     public void dictResize() {
 
+    }
+    private static int roundUpToPowerOf2(int number) {
+        // assert number >= 0 : "number must be non-negative";
+        int rounded = number >= MAXIMUM_CAPACITY
+                ? MAXIMUM_CAPACITY
+                : (rounded = Integer.highestOneBit(number)) != 0
+                ? (Integer.bitCount(number) > 1) ? rounded << 1 : rounded
+                : 1;
+
+        return rounded;
     }
 
     //下方的代码均用来测试
@@ -188,6 +214,9 @@ public class Dict<K, V> implements DictHt.DictCallBack {
                 }
                 if(ops[0].equalsIgnoreCase("get")){
                     System.out.println(dict.get(ops[1]));
+                }
+                if(ops[0].equalsIgnoreCase("delete")){
+                    System.out.println(dict.delete(ops[1]));
                 }
                 if(str.equalsIgnoreCase("exit")){
                     break;
