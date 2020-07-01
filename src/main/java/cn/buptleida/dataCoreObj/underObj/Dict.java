@@ -1,11 +1,13 @@
-package cn.buptleida.dataCoreObj;
+package cn.buptleida.dataCoreObj.underObj;
+
+import cn.buptleida.dataCoreObj.base.RedisObj;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class Dict<K, V> implements DictHt.DictCallBack {
+public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
     static final int DICT_HT_INITIAL_SIZE = 1 << 2;
 
     static final int MAXIMUM_CAPACITY = 1 << 30;

@@ -1,9 +1,10 @@
-package cn.buptleida.dataCoreObj;
+package cn.buptleida.dataCoreObj.underObj;
 
-import java.io.StringReader;
+import cn.buptleida.dataCoreObj.base.RedisObj;
+
 import java.util.Random;
 
-public class SkipList<T extends Comparable<? super T>> {
+public class SkipList<T extends Comparable<? super T>>  implements RedisObj {
 
     //首尾结点的指针
     private SkipListNode<T> header;

@@ -1,11 +1,13 @@
-package cn.buptleida.dataCoreObj;
+package cn.buptleida.dataCoreObj.underObj;
 
-import java.util.ArrayList;
+import cn.buptleida.dataCoreObj.enumerate.IntEnc;
+import cn.buptleida.dataCoreObj.base.RedisObj;
+
 import java.util.Arrays;
 
-public class IntSet {
+public class IntSet implements RedisObj {
 
-    private Enc encoding;
+    private IntEnc encoding;
     private int length;
     private Number[] contents;
 
@@ -15,15 +17,15 @@ public class IntSet {
 
     IntSet() {
 
-        this.encoding = Enc.SHORT;
+        this.encoding = IntEnc.INT_16;
         this.length = 0;
         contents = new Short[0];
     }
 
 
     public void add(long val) {
-        Enc curEnc = valueEncoding(val);//获取新值需要的编码方式
-        if (curEnc.VAL() > encoding.VAL()) {
+        IntEnc curEnc = valueEncoding(val);//获取新值需要的编码方式
+        if (curEnc.LEN() > encoding.LEN()) {
             encoding = curEnc;//将编码方式修改为新编码
             upgradeAndAdd(curEnc, val);
             return;
@@ -101,9 +103,9 @@ public class IntSet {
     private void insert(long val, int pos) {
         contents = Arrays.copyOf(contents, length + 1);
         System.arraycopy(contents, pos, contents, pos + 1, length - pos);
-        if (encoding == Enc.SHORT) {
+        if (encoding == IntEnc.INT_16) {
             contents[pos] = (short) val;
-        } else if (encoding == Enc.INT) {
+        } else if (encoding == IntEnc.INT_32) {
             contents[pos] = (int) val;
         } else {
             contents[pos] = val;
@@ -116,7 +118,7 @@ public class IntSet {
      * 更换数组编码，同时插入val；
      * 不需要判断val插入位置，因为不是在首部就是在尾部
      */
-    private void upgradeAndAdd(Enc enc, long val) {
+    private void upgradeAndAdd(IntEnc enc, long val) {
         Number[] tempArr = contents;
         contents = newArray(enc, length + 1);
         int prepend = val < 0 ? 1 : 0;
@@ -132,13 +134,13 @@ public class IntSet {
      */
     private void setVal(int pos, long val) {
         switch (encoding) {
-            case SHORT:
+            case INT_16:
                 contents[pos] = (short) val;
                 break;
-            case INT:
+            case INT_32:
                 contents[pos] = (int) val;
                 break;
-            case LONG:
+            case INT_64:
                 contents[pos] = val;
                 break;
         }
@@ -147,13 +149,13 @@ public class IntSet {
     /**
      * 根据编码新建一个数组
      */
-    private Number[] newArray(Enc enc, int len) {
+    private Number[] newArray(IntEnc enc, int len) {
         switch (enc) {
-            case SHORT:
+            case INT_16:
                 return new Short[len];
-            case INT:
+            case INT_32:
                 return new Integer[len];
-            case LONG:
+            case INT_64:
                 return new Long[len];
         }
         return null;
@@ -162,13 +164,13 @@ public class IntSet {
     /**
      * 返回适合该val值的编码
      */
-    private Enc valueEncoding(long val) {
-        if (val < Enc.INT.MIN() || val > Enc.INT.MAX()) {
-            return Enc.LONG;
-        } else if (val < Enc.SHORT.MIN() || val > Enc.SHORT.MAX()) {
-            return Enc.INT;
+    private IntEnc valueEncoding(long val) {
+        if (val < IntEnc.INT_32.MIN() || val > IntEnc.INT_32.MAX()) {
+            return IntEnc.INT_64;
+        } else if (val < IntEnc.INT_16.MIN() || val > IntEnc.INT_16.MAX()) {
+            return IntEnc.INT_32;
         } else {
-            return Enc.SHORT;
+            return IntEnc.INT_16;
         }
     }
 
@@ -192,7 +194,7 @@ public class IntSet {
     }
 
     public int blobLen() {
-        return 8 + 4 + 4 + 4 + 4 + length * encoding.VAL();
+        return 8 + 4 + 4 + 4 + 4 + length * encoding.LEN();
     }
 
     public Number[] getContents() {
@@ -231,30 +233,30 @@ public class IntSet {
     }
 }
 
-enum Enc {
-    SHORT(2, -32768, 32767),
-    INT(4, 0x80000000, 0x7fffffff),
-    LONG(8, 0x8000000000000000L, 0x7fffffffffffffffL);
-    private final byte VAL;
-    private final long MIN;
-    private final long MAX;
-
-    public byte VAL() {
-        return VAL;
-    }
-
-    public long MIN() {
-        return MIN;
-    }
-
-    public long MAX() {
-        return MAX;
-    }
-
-    Enc(int val, long min, long max) {
-        this.VAL = (byte) val;
-        this.MIN = min;
-        this.MAX = max;
-    }
-
-}
+// enum Enc {
+//     SHORT(2, -32768, 32767),
+//     INT(4, 0x80000000, 0x7fffffff),
+//     LONG(8, 0x8000000000000000L, 0x7fffffffffffffffL);
+//     private final byte VAL;
+//     private final long MIN;
+//     private final long MAX;
+//
+//     public byte VAL() {
+//         return VAL;
+//     }
+//
+//     public long MIN() {
+//         return MIN;
+//     }
+//
+//     public long MAX() {
+//         return MAX;
+//     }
+//
+//     Enc(int val, long min, long max) {
+//         this.VAL = (byte) val;
+//         this.MIN = min;
+//         this.MAX = max;
+//     }
+//
+// }

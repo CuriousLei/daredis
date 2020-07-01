@@ -1,7 +1,5 @@
-package cn.buptleida.dataCoreObj;
+package cn.buptleida.dataCoreObj.underObj;
 
-
-import java.util.ArrayList;
 
 class SkipListNode <T> {
 

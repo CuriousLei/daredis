@@ -1,4 +1,4 @@
-package cn.buptleida.dataCoreObj;
+package cn.buptleida.dataCoreObj.underObj;
 
 class SkipListLevel{
 
