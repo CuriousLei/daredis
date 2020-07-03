@@ -4,24 +4,13 @@ import cn.buptleida.dataCoreObj.base.RedisObj;
 
 import java.util.Iterator;
 
-class ListNode<T> {
-    ListNode<T> prev;
-    ListNode<T> next;
-    T value;
-
-    ListNode(T x) {
-        value = x;
-    }
-
-}
-
 public class List<T extends Comparable<? super T>> implements RedisObj {
     public static int AL_START_HEAD = 0;
     public static int AL_START_TAIL = 1;
 
-    ListNode<T> head;
-    ListNode<T> tail;
-    long len;
+    private ListNode<T> head;
+    private ListNode<T> tail;
+    private long len;
 
     List() {
         this.len = 0;
@@ -117,7 +106,19 @@ public class List<T extends Comparable<? super T>> implements RedisObj {
         len++;
     }
 
-    private Itr iterator(int direction) {
+    public long getLen() {
+        return len;
+    }
+
+    public ListNode<T> head() {
+        return head;
+    }
+
+    public ListNode<T> tail() {
+        return tail;
+    }
+
+    public Itr iterator(int direction) {
         return new Itr(direction);
     }
 

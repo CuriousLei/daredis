@@ -104,6 +104,10 @@ public class SDS implements RedisObj,Comparable<SDS> {
         return buf;
     }
 
+    public char[] getArray() {
+        return Arrays.copyOfRange(buf,0,len);
+    }
+
     @Override
     public int compareTo(SDS anotherStr) {
         int len1 = len;

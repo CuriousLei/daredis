@@ -7,26 +7,6 @@ import cn.buptleida.dataCoreObj.enumerate.ZLNodeEnc;
 
 import java.util.Arrays;
 
-class zlentry {
-    //前置節點長度
-    int prevrawlen;
-    //記錄前置節點長度的字節數
-    int prevrawlensize;
-
-    //编码值
-    int encoding;
-    //編碼encoding的字节数
-    int encodingSize;
-
-    //頭部長度
-    int headerSize;
-
-    //content的起始位置
-    int contentPos;
-    //content的字節數
-    int contentSize;
-}
-
 public class ZipList implements RedisObj {
 
     private byte[] elementData;
@@ -188,8 +168,10 @@ public class ZipList implements RedisObj {
     /**
      * 给定位置，在element中删除节点
      */
-    private void delete(int pos){
-        zlentry entry = getEntry(pos);
+    public void delete(int pos){
+        delete(pos, getEntry(pos));
+    }
+    public void delete(int pos,zlentry entry){
         int entryLen = entry.headerSize+entry.contentSize;
         delFrom(pos, pos + entryLen);
 
@@ -210,6 +192,45 @@ public class ZipList implements RedisObj {
 
         //更新首部压缩列表长度字段
         writeInt(elementData, zlLen - deleteLen, 0, 4);
+    }
+    /**
+     * 删除与给定int值匹配的结点
+     */
+    public void deleteByIntVal(long val){
+        int len = zlLen();
+        int pos = 10;
+        for (int i = 0; i < len; ++i){
+            zlentry entry = getEntry(pos);
+            if(isIntVal(entry)){
+                long itemVal = getNodeVal_Int(entry);
+                if(itemVal==val){
+                    delete(pos,entry);
+                    continue;
+                }
+            }
+            pos += entry.size();
+        }
+    }
+    public void deleteByIntVal(byte[] arr){
+        int len = zlLen();
+        int pos = 10;
+        for (int i = 0; i < len; ++i){
+            zlentry entry = getEntry(pos);
+            if(!isIntVal(entry)){
+                byte[] itemArr = getNodeVal_ByteArr(entry);
+                if(arr.length==itemArr.length){
+                    int j;
+                    for(j=0;j<arr.length;++j){
+                        if(arr[j]!=itemArr[j]) break;
+                    }
+                    if(j==arr.length){
+                        delete(pos,entry);
+                        continue;
+                    }
+                }
+            }
+            pos += entry.size();
+        }
     }
     /**
      * 连锁更新
@@ -247,7 +268,7 @@ public class ZipList implements RedisObj {
     /**
      * 根据字节数组中的位置获取entry结点信息
      */
-    private zlentry getEntry(int pos) {
+    public zlentry getEntry(int pos) {
         if (pos < 10) return null;//pos必须大于10
         int flagByte = (int) readInt(elementData, pos, 1);
         if (flagByte == 255) return null;//此时表示读取压缩列表末端标识位
@@ -364,6 +385,9 @@ public class ZipList implements RedisObj {
         return (int) res;
     }
 
+    /**
+     * 判断结点是否是整型结点
+     */
     public static boolean isIntVal(zlentry entry) {
         if (entry.encodingSize > 1) return false;
         if ((entry.encoding & 192) == 0) return false;
@@ -371,18 +395,43 @@ public class ZipList implements RedisObj {
         return true;
     }
 
-    private int zlBytes() {
+
+
+    /**
+     * 整个压缩列表占用字节数
+     */
+    public int zlBytes() {
         return (int) readInt(elementData, 0, IntEnc.INT_32.LEN());
     }
-
-    private int zlTail() {
+    /**
+     * 获取末尾元素距离起始地址有多少字节
+     */
+    public int zlTail() {
         return (int) readInt(elementData, 4, IntEnc.INT_32.LEN());
     }
-
-    private int zlLen() {
+    /**
+     * 获取压缩列表中元素个数
+     */
+    public int zlLen() {
         return (int) readInt(elementData, 8, IntEnc.INT_16.LEN());
     }
 
+    /**
+     * 根据entry获取结点值（整型）
+     * 注意：使用之前必须要用isIntVal()检查
+     */
+    public long getNodeVal_Int(zlentry entry){
+        //if(!isIntVal(entry)) return ;
+        long val = readInt(elementData, entry.contentPos, entry.contentSize);
+        return val;
+    }
+    /**
+     * 根据entry获取结点值（字节数组）
+     */
+    public byte[] getNodeVal_ByteArr(zlentry entry){
+        byte[] arr = Arrays.copyOfRange(elementData, entry.contentPos, entry.contentPos + entry.contentSize);
+        return arr;
+    }
     //test
     public static void main(String[] args) {
         String str = "1111111";
