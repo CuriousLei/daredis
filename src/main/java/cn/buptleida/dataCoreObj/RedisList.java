@@ -9,6 +9,7 @@ import cn.buptleida.dataCoreObj.underObj.*;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class RedisList extends RedisObject {
@@ -28,12 +29,13 @@ public class RedisList extends RedisObject {
         if (encoding == RedisEnc.ZIPLIST.VAL()) {
             ZipList zipList = (ZipList) ptr;
             zipList.push(val, where);
+
+            checkVary(8);
         } else {
             List<SDS> linkedList = (List<SDS>) ptr;
             if (where == 0) linkedList.addNodeHead(new SDS(Long.toString(val).toCharArray()));
             else linkedList.addNodeTail(new SDS(Long.toString(val).toCharArray()));
         }
-
     }
 
     /**
@@ -170,6 +172,7 @@ public class RedisList extends RedisObject {
 
     /**
      * 在index的位置插入整型结点
+     * 只用于压缩列表
      */
     public RedisObj insertAtIndex(int index, long val) {
         if (encoding == RedisEnc.LINKEDLIST.VAL()) return ptr;
@@ -191,12 +194,18 @@ public class RedisList extends RedisObject {
         } else {
             List<SDS> linkedList = (List<SDS>) ptr;
             ListNode<SDS> node = linkedList.head();
-            int k = 0;
-            while (k != index) {
-                node = node.next;
-                k++;
+            SDS newSds = new SDS(str.toCharArray());
+            if(linkedList.getLen()==0||index==0){
+                linkedList.addNodeHead(newSds);
+            }else{
+                int k = 1;
+                while (k != index) {
+                    node = node.next;
+                    k++;
+                }
+                linkedList.insertNode(node, newSds, 1);
             }
-            linkedList.insertNode(node, new SDS(str.toCharArray()), 0);
+
         }
         return ptr;
     }
@@ -220,11 +229,101 @@ public class RedisList extends RedisObject {
             return Status.SUCCESS;
         }
 
+        SDS anStr = new SDS(str.toCharArray());
         List<SDS> linkedList = (List<SDS>) ptr;
-        ListNode<SDS> node = linkedList.searchKey(new SDS(str.toCharArray()));
-        if (node == null) return Status.ERROR;
-        linkedList.delNode(node);
+        ListNode<SDS> node = linkedList.head();
+
+        while(node!=null){
+            if(node.getValue().compareTo(anStr)==0){
+                ListNode<SDS> next = node.next;
+                linkedList.delNode(node);
+                node = next;
+                continue;
+            }
+            node = node.next;
+        }
+
         return Status.SUCCESS;
+    }
+
+    public static void main(String[] args) {
+
+        //byte[] arr = new byte[0];
+        // List<SDS> linkList = new List<>();
+        RedisList list = new RedisList();
+        testLinkList(list);
+
+        //list.push(1,1);
+        // list.push("ertyuii",1);
+        // list.push(876,0);
+        // list.insertAtIndex(1,999999);
+        // list.insertAtIndex(4,"uiuiuiui");
+        // //list.insertAtIndex(7,6776);
+        // System.out.println("列表长度："+list.LLen());
+        // printAllItem(list);
+        // // System.out.println(list.pop(0));
+        // // printAllItem(list);
+        // // System.out.println(list.pop(1));
+        // list.deleteByVal("uiuiuiui");
+        // list.deleteByVal(999999);
+        //printAllItem(list);
+    }
+    private static void printAllItem(RedisList list){
+        if(list.encoding == RedisEnc.ZIPLIST.VAL()){
+            ZipList zipList = (ZipList) list.ptr;
+            ZipList.print(zipList);
+        }else{
+            List<SDS> linkedList = (List<SDS>) list.ptr;
+            Iterator<SDS> it = linkedList.iterator(List.AL_START_HEAD);
+            while (it.hasNext()){
+                SDS sds = it.next();
+                System.out.print(" "+ Arrays.toString(sds.getBuf()));
+            }
+            System.out.println();
+        }
+    }
+    private static void testLinkList(RedisList list){
+        // for(int i=1;i<401;++i){
+        //     list.push(i,1);
+        // }
+        // for(int i=1;i<112;++i){
+        //     list.push("sds"+i,1);
+        // }
+        for(int i=1;i<4;++i){
+            list.push(i,1);
+        }
+        list.push("qwertyuiopasdfghjklzxcvbnm1234567",1);
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
+        list.pop(0);
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
+        list.push(10086,1);
+        list.push("iiiiioooo",0);
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
+        list.pop(1);
+        list.pop(1);
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
+        //list.insertAtIndex(1,88888);
+        list.insertAtIndex(3,"leidaniubi");
+        list.insertAtIndex(2,"curiouslei");
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
+
+        list.deleteByVal("curiouslei");
+        list.insertAtIndex(0,"3");
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
+
+        list.deleteByVal("3");
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
+
+        list.deleteByVal("leidaniubi");
+        System.out.println("列表长度："+list.LLen());
+        printAllItem(list);
     }
 
 }

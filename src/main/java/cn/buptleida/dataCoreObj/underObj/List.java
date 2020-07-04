@@ -12,7 +12,7 @@ public class List<T extends Comparable<? super T>> implements RedisObj {
     private ListNode<T> tail;
     private long len;
 
-    List() {
+    public List() {
         this.len = 0;
         this.head = null;
         this.tail = null;

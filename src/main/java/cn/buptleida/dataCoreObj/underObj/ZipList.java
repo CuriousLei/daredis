@@ -5,6 +5,7 @@ import cn.buptleida.dataCoreObj.base.RedisObj;
 import cn.buptleida.dataCoreObj.enumerate.Status;
 import cn.buptleida.dataCoreObj.enumerate.ZLNodeEnc;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class ZipList implements RedisObj {
@@ -46,7 +47,7 @@ public class ZipList implements RedisObj {
 
         int contentSize = ZLNodeEnc.getConLen(encoding);
         byte[] valArr = new byte[contentSize];
-        writeInt(valArr,val,0,contentSize);
+        writeInt(valArr, val, 0, contentSize);
 
         return pushEntry(valArr, where, encoding);
     }
@@ -62,8 +63,8 @@ public class ZipList implements RedisObj {
     }
 
     private int pushEntry(byte[] content, int where, long encoding) {
-
-        if (where == 1) {
+        int len = zlLen();
+        if (where == 1 && len != 0) {
             return insertAfter(zlTail(), content, encoding);
         }
 
@@ -81,7 +82,7 @@ public class ZipList implements RedisObj {
 
         int contentSize = ZLNodeEnc.getConLen(encoding);
         byte[] valArr = new byte[contentSize];
-        writeInt(valArr,val,0,contentSize);
+        writeInt(valArr, val, 0, contentSize);
 
         return insertAtIndex(index, valArr, encoding);
     }
@@ -116,8 +117,8 @@ public class ZipList implements RedisObj {
      * 将新结点插入到pos指向结点的后置位
      */
     private int insertAfter(int pos, byte[] val, long encoding) {
-        int len = zlLen();
-        if (len == 0) return Status.ERROR;
+        // int len = zlLen();
+        // if (len == 0) return Status.ERROR;
 
         int bytesLen = zlBytes();
         //pos不合法
@@ -154,7 +155,7 @@ public class ZipList implements RedisObj {
         chainUpdate(pos + newEntryLen, newEntryLen);
     }
 
-    private void copyInto(int pos, byte[] byteArr){
+    private void copyInto(int pos, byte[] byteArr) {
         int zlLen = elementData.length;
         int newLen = byteArr.length;
         elementData = Arrays.copyOf(elementData, elementData.length + newLen);
@@ -168,11 +169,12 @@ public class ZipList implements RedisObj {
     /**
      * 给定位置，在element中删除节点
      */
-    public void delete(int pos){
+    public void delete(int pos) {
         delete(pos, getEntry(pos));
     }
-    public void delete(int pos,zlentry entry){
-        int entryLen = entry.headerSize+entry.contentSize;
+
+    public void delete(int pos, zlentry entry) {
+        int entryLen = entry.headerSize + entry.contentSize;
         delFrom(pos, pos + entryLen);
 
         int zlTail = zlTail();
@@ -184,47 +186,49 @@ public class ZipList implements RedisObj {
         writeInt(elementData, zlLen - 1, 8, 2);
     }
 
-    private void delFrom(int from, int to){
+    private void delFrom(int from, int to) {
         int zlLen = elementData.length;
-        int deleteLen = to -from;
+        int deleteLen = to - from;
         System.arraycopy(elementData, to, elementData, from, zlLen - to);
-        elementData = Arrays.copyOf(elementData,zlLen-deleteLen);
+        elementData = Arrays.copyOf(elementData, zlLen - deleteLen);
 
         //更新首部压缩列表长度字段
         writeInt(elementData, zlLen - deleteLen, 0, 4);
     }
+
     /**
      * 删除与给定int值匹配的结点
      */
-    public void deleteByIntVal(long val){
+    public void deleteByIntVal(long val) {
         int len = zlLen();
         int pos = 10;
-        for (int i = 0; i < len; ++i){
+        for (int i = 0; i < len; ++i) {
             zlentry entry = getEntry(pos);
-            if(isIntVal(entry)){
+            if (isIntVal(entry)) {
                 long itemVal = getNodeVal_Int(entry);
-                if(itemVal==val){
-                    delete(pos,entry);
+                if (itemVal == val) {
+                    delete(pos, entry);
                     continue;
                 }
             }
             pos += entry.size();
         }
     }
-    public void deleteByIntVal(byte[] arr){
+
+    public void deleteByIntVal(byte[] arr) {
         int len = zlLen();
         int pos = 10;
-        for (int i = 0; i < len; ++i){
+        for (int i = 0; i < len; ++i) {
             zlentry entry = getEntry(pos);
-            if(!isIntVal(entry)){
+            if (!isIntVal(entry)) {
                 byte[] itemArr = getNodeVal_ByteArr(entry);
-                if(arr.length==itemArr.length){
+                if (arr.length == itemArr.length) {
                     int j;
-                    for(j=0;j<arr.length;++j){
-                        if(arr[j]!=itemArr[j]) break;
+                    for (j = 0; j < arr.length; ++j) {
+                        if (arr[j] != itemArr[j]) break;
                     }
-                    if(j==arr.length){
-                        delete(pos,entry);
+                    if (j == arr.length) {
+                        delete(pos, entry);
                         continue;
                     }
                 }
@@ -232,6 +236,7 @@ public class ZipList implements RedisObj {
             pos += entry.size();
         }
     }
+
     /**
      * 连锁更新
      */
@@ -239,27 +244,25 @@ public class ZipList implements RedisObj {
         zlentry entry = getEntry(pos);
 
         if (entry == null) return;
-        int entrySize = entry.headerSize+entry.contentSize;
+        int entrySize = entry.headerSize + entry.contentSize;
 
-        if(entry.prevrawlen<254){
-            if(newPreLen<254) {
+        if (entry.prevrawlen < 254) {
+            if (newPreLen < 254) {
                 writeInt(elementData, newPreLen, pos, 1);
-            }
-            else{
+            } else {
                 writeInt(elementData, 254, pos, 1);
                 byte[] newPreLenByteArr = new byte[4];
-                writeInt(newPreLenByteArr,newPreLen,0,4);
+                writeInt(newPreLenByteArr, newPreLen, 0, 4);
                 copyInto(pos, newPreLenByteArr);
-                chainUpdate(pos + entrySize + 4, entrySize+4);
+                chainUpdate(pos + entrySize + 4, entrySize + 4);
             }
-        }else{
-            if(newPreLen<254) {
+        } else {
+            if (newPreLen < 254) {
                 writeInt(elementData, newPreLen, pos, 1);
-                delFrom(pos+1,pos+5);
-                chainUpdate(pos + entrySize - 4, entrySize-4);
-            }
-            else{
-                writeInt(elementData, newPreLen, pos+1, 4);
+                delFrom(pos + 1, pos + 5);
+                chainUpdate(pos + entrySize - 4, entrySize - 4);
+            } else {
+                writeInt(elementData, newPreLen, pos + 1, 4);
             }
         }
 
@@ -274,11 +277,11 @@ public class ZipList implements RedisObj {
         if (flagByte == 255) return null;//此时表示读取压缩列表末端标识位
         zlentry entry = new zlentry();
         if (flagByte == 254) {
-            entry.prevrawlen = (int)readInt(elementData, pos + 1, 4);
+            entry.prevrawlen = (int) readInt(elementData, pos + 1, 4);
             entry.prevrawlensize = 5;
             pos += 5;
         } else {
-            entry.prevrawlen = (int)readInt(elementData, pos, 1);
+            entry.prevrawlen = (int) readInt(elementData, pos, 1);
             entry.prevrawlensize = 1;
             pos += 1;
         }
@@ -290,17 +293,17 @@ public class ZipList implements RedisObj {
             pos += 1;
         } else if (encByte < 64) {
             entry.encodingSize = 1;
-            entry.contentSize = entry.encoding = (int)readInt(elementData, pos, 1);
+            entry.contentSize = entry.encoding = (int) readInt(elementData, pos, 1);
 
             pos += 1;
         } else if (encByte < 128) {
             entry.encodingSize = 2;
-            entry.encoding = (int)readInt(elementData, pos, 2);
+            entry.encoding = (int) readInt(elementData, pos, 2);
             entry.contentSize = entry.encoding - 0b0100000000000000;
             pos += 2;
         } else {
             entry.encodingSize = 5;
-            entry.contentSize = entry.encoding = (int)readInt(elementData, pos+1, 4);
+            entry.contentSize = entry.encoding = (int) readInt(elementData, pos + 1, 4);
             pos += 5;
         }
         entry.headerSize = entry.prevrawlensize + entry.encodingSize;
@@ -396,19 +399,20 @@ public class ZipList implements RedisObj {
     }
 
 
-
     /**
      * 整个压缩列表占用字节数
      */
     public int zlBytes() {
         return (int) readInt(elementData, 0, IntEnc.INT_32.LEN());
     }
+
     /**
      * 获取末尾元素距离起始地址有多少字节
      */
     public int zlTail() {
         return (int) readInt(elementData, 4, IntEnc.INT_32.LEN());
     }
+
     /**
      * 获取压缩列表中元素个数
      */
@@ -420,32 +424,38 @@ public class ZipList implements RedisObj {
      * 根据entry获取结点值（整型）
      * 注意：使用之前必须要用isIntVal()检查
      */
-    public long getNodeVal_Int(zlentry entry){
+    public long getNodeVal_Int(zlentry entry) {
         //if(!isIntVal(entry)) return ;
-        long val = readInt(elementData, entry.contentPos, entry.contentSize);
+        long val;
+        if (entry.contentSize == 0) val = entry.encoding - ZLNodeEnc.INT_24.VAL() - 1;
+        else val = readInt(elementData, entry.contentPos, entry.contentSize);
         return val;
     }
+
     /**
      * 根据entry获取结点值（字节数组）
      */
-    public byte[] getNodeVal_ByteArr(zlentry entry){
+    public byte[] getNodeVal_ByteArr(zlentry entry) {
         byte[] arr = Arrays.copyOfRange(elementData, entry.contentPos, entry.contentPos + entry.contentSize);
         return arr;
     }
+
     //test
     public static void main(String[] args) {
-        String str = "1111111";
-        byte[] byteArr = str.getBytes();
+        String str = "qwertyuiopasdfghjklzxcvbnm1234567";
+        byte[] byteArr = str.getBytes(StandardCharsets.UTF_16BE);
+        System.out.println(Arrays.toString(byteArr));
         ZipList zipList = new ZipList();
-        zipList.push(111, 0);
-        zipList.push(8388603, 1);
-        zipList.insertAt(2, 234567333123L);
-        zipList.push(byteArr, 0);
-        zipList.insertAt(2, byteArr);
-        print(zipList);
-
-        zipList.delete(31);
-        zipList.delete(10);
+        zipList.push(byteArr, 1);
+        //System.out.println(zipList.zlBytes());
+        // zipList.push(8388603, 1);
+        // zipList.insertAt(2, 234567333123L);
+        // zipList.push(byteArr, 0);
+        // zipList.insertAt(2, byteArr);
+        // print(zipList);
+        //
+        // zipList.delete(31);
+        // zipList.delete(10);
         print(zipList);
 
         // printEntryInfo(zipList, zipList.getEntryByIndex(0));
@@ -460,7 +470,7 @@ public class ZipList implements RedisObj {
         for (int i = 0; i < len; ++i) {
             zlentry entry = zipList.getEntry(pos);
             if (ZipList.isIntVal(entry)) {
-                long content = zipList.readInt(zipList.elementData, pos + entry.headerSize, entry.contentSize);
+                long content = zipList.getNodeVal_Int(entry);
                 System.out.println("pos: " + pos + ",preLen: " + entry.prevrawlen + ",encoding: " + entry.encoding + "," +
                         "content: " + content);
             } else {
@@ -476,7 +486,7 @@ public class ZipList implements RedisObj {
 
     public static void printEntryInfo(ZipList zipList, zlentry entry) {
         if (ZipList.isIntVal(entry)) {
-            long content = zipList.readInt(zipList.elementData, entry.contentPos, entry.contentSize);
+            long content = zipList.getNodeVal_Int(entry);
             System.out.println(content);
         } else {
             byte[] arr = Arrays.copyOfRange(zipList.elementData, entry.contentPos, entry.contentPos + entry.contentSize);
