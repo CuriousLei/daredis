@@ -65,7 +65,7 @@ public class ZipList implements RedisObj {
     private int pushEntry(byte[] content, int where, long encoding) {
         int len = zlLen();
         if (where == 1 && len != 0) {
-            return insertAfter(zlTail(), content, encoding);
+            return insertAfter(getEntry(zlTail()), content, encoding);
         }
 
         byte[] entry = packEntry(0, content, encoding);
@@ -75,7 +75,8 @@ public class ZipList implements RedisObj {
 
     /**
      * 插入整型结点；
-     * 将新结点插入到index的位置
+     * 将新结点插入到index的位置;
+     * 注意index是结点下标，不是byte数组中的下标
      */
     public int insertAt(int index, long val) {
         long encoding = ZLNodeEnc.getEncoding_Int(val);
@@ -110,24 +111,41 @@ public class ZipList implements RedisObj {
             preLen = readPreLen(pos -= preLen);
         }
 
-        return insertAfter(pos, content, encoding);
+        return insertAfter(getEntry(pos), content, encoding);
     }
 
     /**
-     * 将新结点插入到pos指向结点的后置位
+     * 插入一个新结点于目标结点之后
+     *
+     * @param desEntry 目标结点，插在该结点之后
+     * @param val      待插入的结点值
+     * @return 成功返回1，失败返回0
      */
-    private int insertAfter(int pos, byte[] val, long encoding) {
-        // int len = zlLen();
-        // if (len == 0) return Status.ERROR;
+    public int insertAfter(zlentry desEntry, long val) {
+        long encoding = ZLNodeEnc.getEncoding_Int(val);
+        int contentSize = ZLNodeEnc.getConLen(encoding);
+        byte[] valArr = new byte[contentSize];
+        writeInt(valArr, val, 0, contentSize);
 
-        int bytesLen = zlBytes();
-        //pos不合法
-        if (pos < 10 || pos >= bytesLen - 1) return Status.ERROR;
+        return insertAfter(desEntry, valArr, encoding);
+    }
 
-        //插入结点的前置结点信息
-        zlentry desEntry = getEntry(pos);
-        int desEntryLen = desEntry.headerSize + desEntry.contentSize;
-        int desPos = pos + desEntryLen;
+    public int insertAfter(zlentry desEntry, byte[] val) {
+        long encoding = ZLNodeEnc.getEncoding_ByteArr(val.length);
+
+        return insertAfter(desEntry, val, encoding);
+    }
+
+    /**
+     * 将新结点插入给定结点的后置位
+     */
+    private int insertAfter(zlentry desEntry, byte[] val, long encoding) {
+
+        //desEntry不合法
+        if (desEntry == null) return Status.ERROR;
+
+        int desEntryLen = desEntry.size();
+        int desPos = desEntry.endPos();
 
         byte[] entry = packEntry(desEntryLen, val, encoding);
         insert(desPos, entry);
@@ -170,11 +188,12 @@ public class ZipList implements RedisObj {
      * 给定位置，在element中删除节点
      */
     public void delete(int pos) {
-        delete(pos, getEntry(pos));
+        delete(getEntry(pos));
     }
 
-    public void delete(int pos, zlentry entry) {
-        int entryLen = entry.headerSize + entry.contentSize;
+    public void delete(zlentry entry) {
+        int entryLen = entry.size();
+        int pos = entry.startPos();
         delFrom(pos, pos + entryLen);
 
         int zlTail = zlTail();
@@ -207,7 +226,7 @@ public class ZipList implements RedisObj {
             if (isIntVal(entry)) {
                 long itemVal = getNodeVal_Int(entry);
                 if (itemVal == val) {
-                    delete(pos, entry);
+                    delete(entry);
                     continue;
                 }
             }
@@ -222,19 +241,35 @@ public class ZipList implements RedisObj {
             zlentry entry = getEntry(pos);
             if (!isIntVal(entry)) {
                 byte[] itemArr = getNodeVal_ByteArr(entry);
-                if (arr.length == itemArr.length) {
-                    int j;
-                    for (j = 0; j < arr.length; ++j) {
-                        if (arr[j] != itemArr[j]) break;
-                    }
-                    if (j == arr.length) {
-                        delete(pos, entry);
-                        continue;
-                    }
+                if (bytesEqual(itemArr, arr)) {
+                    delete(entry);
+                    continue;
                 }
+                // if (arr.length == itemArr.length) {
+                //     int j;
+                //     for (j = 0; j < arr.length; ++j) {
+                //         if (arr[j] != itemArr[j]) break;
+                //     }
+                //     if (j == arr.length) {
+                //         delete(pos, entry);
+                //         continue;
+                //     }
+                // }
             }
             pos += entry.size();
         }
+    }
+
+    /**
+     * 判断两个字节数组是否相等
+     * 相等返回true，不相等返回false
+     */
+    private boolean bytesEqual(byte[] arr1, byte[] arr2) {
+        if (arr1.length != arr2.length) return false;
+        for (int j = 0; j < arr1.length; ++j) {
+            if (arr1[j] != arr2[j]) return false;
+        }
+        return true;
     }
 
     /**
@@ -439,6 +474,37 @@ public class ZipList implements RedisObj {
         byte[] arr = Arrays.copyOfRange(elementData, entry.contentPos, entry.contentPos + entry.contentSize);
         return arr;
     }
+
+    /**
+     * 获取下一个相邻结点
+     */
+    public zlentry getNextEntry(zlentry entry) {
+        return getEntry(entry.contentPos + entry.contentSize);
+    }
+
+
+    /**
+     * 输入val，判断是否存在，若存在返回pos，不存在返回-1;
+     * flag表示如何进行遍历，1表示遍历奇数结点，2表示遍历偶数结点，0表示遍历所有结点
+     */
+    public zlentry exist(byte[] arr, int flag) {
+        int tail = zlTail();
+        zlentry entry;
+        int pos = 10;
+        if (flag == 2) {
+            entry = getEntry(pos);
+            pos += entry.size();
+        }
+        for (; pos <= tail; pos += entry.size()) {
+            entry = getEntry(pos);
+            flag = -flag;
+            if (flag > 0) continue;
+            byte[] element = getNodeVal_ByteArr(entry);
+            if (bytesEqual(element, arr)) return entry;
+        }
+        return null;
+    }
+
 
     //test
     public static void main(String[] args) {

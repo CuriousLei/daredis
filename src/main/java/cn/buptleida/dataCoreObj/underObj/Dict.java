@@ -84,6 +84,14 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
         return null;
     }
 
+    /**
+     * 判断是否存在某个键值对
+     */
+    public boolean exist(K key){
+        if(dictContainsKey(key) == null)
+            return false;
+        return true;
+    }
 
     private int hash(K key) {
         int h = 0;
@@ -117,6 +125,14 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
         if((e = htBac.delete(key,getIndex(hash, htBac.getSize())))!=null)
             return e.getValue();
         return null;
+    }
+
+    /**
+     *
+     * @return 字典中键值对数量
+     */
+    public int dictSize(){
+        return ht.getSize() + htBac.getSize();
     }
 
     private void dictRehash(int n) {
@@ -187,7 +203,7 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
         systemRead(dict);
     }
 
-    private static void printDictInfo(Dict<?,?> dict){
+    public static void printDictInfo(Dict<?,?> dict){
         System.out.println("treHashIdx: "+dict.treHashIdx);
         System.out.println("ht-size:"+dict.ht.getSize()+", ht-used:"+dict.ht.used);
         printHashTableInfo(dict.ht.table);

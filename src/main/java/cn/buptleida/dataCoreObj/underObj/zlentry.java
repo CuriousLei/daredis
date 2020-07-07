@@ -22,4 +22,10 @@ public class zlentry {
     public int size() {
         return headerSize + contentSize;
     }
+    public int startPos(){
+        return contentPos - headerSize;
+    }
+    public int endPos(){
+        return contentPos + contentSize;
+    }
 }
