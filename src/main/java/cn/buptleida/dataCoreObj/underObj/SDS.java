@@ -111,6 +111,15 @@ public class SDS implements RedisObj, Comparable<SDS> {
         return Arrays.copyOfRange(buf, 0, len);
     }
 
+    public int hashCode() {
+        int h = 0;
+        char[] val = getArray();
+        for (int i = 0; i < len; ++i) {
+            h = 31 * h + val[i];
+        }
+        return h;
+    }
+
     @Override
     public String toString() {
         return new String(getArray());
