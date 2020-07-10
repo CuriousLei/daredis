@@ -81,18 +81,25 @@ public class SDS implements RedisObj, Comparable<SDS> {
     /**
      * 与另一个sds字符串比较，是否相等
      */
-    public boolean equals(SDS another) {
-        if (len != another.len()) return false;
-
-        char[] v1 = buf;
-        char[] v2 = another.getBuf();
-        int i = 0, n = len;
-        while (n-- > 0) {
-            if (v1[i] != v2[i])
-                return false;
-            i++;
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
         }
-        return true;
+        if(anObject instanceof SDS){
+            SDS another = (SDS) anObject;
+            if (len != another.len()) return false;
+
+            char[] v1 = buf;
+            char[] v2 = another.getBuf();
+            int i = 0, n = len;
+            while (n-- > 0) {
+                if (v1[i] != v2[i])
+                    return false;
+                i++;
+            }
+            return true;
+        }
+        return false;
     }
 
     public int len() {

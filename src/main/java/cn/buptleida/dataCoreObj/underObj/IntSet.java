@@ -2,8 +2,10 @@ package cn.buptleida.dataCoreObj.underObj;
 
 import cn.buptleida.dataCoreObj.enumerate.IntEnc;
 import cn.buptleida.dataCoreObj.base.RedisObj;
+import cn.buptleida.dataCoreObj.enumerate.Status;
 
 import java.util.Arrays;
+import java.util.Random;
 
 public class IntSet implements RedisObj {
 
@@ -15,7 +17,7 @@ public class IntSet implements RedisObj {
     // private Integer[] intContents;
     // private Long[] longContents;
 
-    IntSet() {
+    public IntSet() {
 
         this.encoding = IntEnc.INT_16;
         this.length = 0;
@@ -38,13 +40,14 @@ public class IntSet implements RedisObj {
 
     }
 
-    public void remove(long val) {
+    public int remove(long val) {
         int index;
-        if ((index = getIndex(val)) > -1) {
-            System.arraycopy(contents, index + 1, contents, index, length - index - 1);
-            contents = Arrays.copyOf(contents, length - 1);
-            length--;
-        }
+        if ((index = getIndex(val)) < 0)
+            return Status.ERROR;
+        System.arraycopy(contents, index + 1, contents, index, length - index - 1);
+        contents = Arrays.copyOf(contents, length - 1);
+        length--;
+        return Status.SUCCESS;
     }
 
 
@@ -56,10 +59,26 @@ public class IntSet implements RedisObj {
         return Math.ceil(t) == t;
     }
 
+    /**
+     * 根据index返回对应的元素
+     * @param index
+     * @return
+     */
     public long get(int index) {
         rangeCheck(index);
 
-        return (long) contents[index];
+        return contents[index].longValue();
+    }
+
+    /**
+     * 随机返回列表中一个元素
+     * @return
+     */
+    public long getRandom(){
+        Random rand = new Random();
+        int index = rand.nextInt(length);
+
+        return get(index);
     }
 
     /**
@@ -68,6 +87,17 @@ public class IntSet implements RedisObj {
     public int getIndex(long val) {
         float t = binarySearch(val);
         return (int) (t + 0.5) == t ? (int) t : -1;
+    }
+
+    /**
+     * 判断是否包含某整数
+     * @param val
+     * @return 若存在返回true，不存在返回false
+     */
+    public boolean exist(long val){
+        if(getIndex(val)==-1)
+            return false;
+        return true;
     }
 
     /**
@@ -233,30 +263,3 @@ public class IntSet implements RedisObj {
     }
 }
 
-// enum Enc {
-//     SHORT(2, -32768, 32767),
-//     INT(4, 0x80000000, 0x7fffffff),
-//     LONG(8, 0x8000000000000000L, 0x7fffffffffffffffL);
-//     private final byte VAL;
-//     private final long MIN;
-//     private final long MAX;
-//
-//     public byte VAL() {
-//         return VAL;
-//     }
-//
-//     public long MIN() {
-//         return MIN;
-//     }
-//
-//     public long MAX() {
-//         return MAX;
-//     }
-//
-//     Enc(int val, long min, long max) {
-//         this.VAL = (byte) val;
-//         this.MIN = min;
-//         this.MAX = max;
-//     }
-//
-// }

@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Random;
 
 public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
     static final int DICT_HT_INITIAL_SIZE = 1 << 2;
@@ -132,7 +133,50 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
      * @return 字典中键值对数量
      */
     public int dictSize(){
-        return ht.getSize() + htBac.getSize();
+        return ht.getUsed() + htBac.getUsed();
+    }
+
+    /**
+     * 获得字典里随机一个结点
+     * @return
+     */
+    public DictHt.Entry<K,V> dictGetRandomEntry(){
+        DictHt.Entry<K,V> entry;
+        Random rand = new Random();
+        if(isRehashing()){
+            do{
+                int h = rand.nextInt(ht.getSize()+htBac.getSize());
+                entry = h<ht.getSize()?ht.table[h]:htBac.table[h-ht.getSize()];
+            }while (entry == null);
+        }else{
+            do{
+                int h = rand.nextInt(ht.getSize());
+                entry = ht.table[h];
+            }while (entry == null);
+        }
+        //计算链表长度
+        int listLen = 0;
+        DictHt.Entry<K,V> temp = entry;
+        while(temp!=null){
+            temp = temp.next;
+            listLen++;
+        }
+        //取链表上随机一个结点
+        int listIndex = rand.nextInt(listLen);
+        DictHt.Entry<K,V>  res = entry;
+        while (listIndex--!=0){
+            res = res.next;
+        }
+
+        return res;
+    }
+    /**
+     * 获得字典里随机一个结点的键
+     * @return
+     */
+    public K dictGetRandomKey(){
+        DictHt.Entry<K,V> entry = dictGetRandomEntry();
+        return entry.getKey();
     }
 
     private void dictRehash(int n) {
@@ -193,14 +237,23 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
 
     //下方的代码均用来测试
     public static void main(String[] args) {
-        Dict<String, Integer> dict = new Dict<>();
-        dict.put("leida",98);
-        dict.put("qihang",98);
-        dict.put("mky",98);
-        dict.put("hyr",98);
-        dict.put("zzy",98);
-        dict.put("duenbo",98);
-        systemRead(dict);
+        Dict<SDS, SDS> dict = new Dict<>();
+        String str = "leida";
+        SDS sds = new SDS(str.toCharArray());
+        SDS key = new SDS(str.toCharArray());
+        System.out.println("sds "+(key.equals(sds)));
+        dict.put(sds,null);
+
+        // dict.put("qihang",98);
+        // dict.put("mky",98);
+        // dict.put("hyr",98);
+        // dict.put("zzy",98);
+        // dict.put("duenbo",98);
+        //System.out.println(dict.exist(sds));
+        System.out.println(dict.exist(sds));
+        System.out.println(dict.exist(key));
+        printDictInfo(dict);
+        //systemRead(dict);
     }
 
     public static void printDictInfo(Dict<?,?> dict){

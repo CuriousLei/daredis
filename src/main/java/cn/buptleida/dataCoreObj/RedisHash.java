@@ -171,12 +171,12 @@ public class RedisHash extends RedisObject {
             ZipList list = (ZipList) ptr;
             int len = list.zlLen();
             if (len > 1024 || elementSize >= 64) {
-                ptr = zipList2Dict();
+                zipList2Dict();
             }
         }
     }
 
-    private Dict<SDS,SDS> zipList2Dict(){
+    private void zipList2Dict(){
         Dict<SDS,SDS> dict = new Dict<>();
         ZipList zipList = (ZipList) ptr;
         int len = zipList.zlLen()/2;
@@ -203,19 +203,19 @@ public class RedisHash extends RedisObject {
         }
 
         encoding = RedisEnc.HT.VAL();
-        return dict;
+        ptr = dict;
     }
 
     public static void main(String[] args) {
         RedisHash hash = new RedisHash();
-        // testDict(hash);
-        hash.hSet("name","leida");
-        hash.hSet("age",23);
-        hash.hSet("level",15);
-        printAllItem(hash);
-
-        hash.hSet("name","qwertyuiopasdfghjklzxcvbnm1234567");
-        printAllItem(hash);
+        testDict(hash);
+        // hash.hSet("name","leida");
+        // hash.hSet("age",23);
+        // hash.hSet("level",15);
+        // printAllItem(hash);
+        //
+        // hash.hSet("name","qwertyuiopasdfghjklzxcvbnm1234567");
+        // printAllItem(hash);
     }
     private static void printAllItem(RedisHash hash) {
         if (hash.encoding == RedisEnc.ZIPLIST.VAL()) {
@@ -238,6 +238,7 @@ public class RedisHash extends RedisObject {
         System.out.println(hash.hLen());
         hash.hSet("56","qiqiqiqiqi");
         System.out.println(hash.hGet("56"));
+        System.out.println(hash.hExists("56"));
         //printAllItem(hash);
     }
 }

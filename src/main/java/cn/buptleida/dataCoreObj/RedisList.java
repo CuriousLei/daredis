@@ -110,7 +110,7 @@ public class RedisList extends RedisObject {
             ZipList list = (ZipList) ptr;
             int len = list.zlLen();
             if (len >= 512 || elementSize >= 64) {
-                ptr = zipList2LinkList();
+                zipList2LinkList();
             }
         }
     }
@@ -118,7 +118,7 @@ public class RedisList extends RedisObject {
     /**
      * 压缩列表转化为双端链表
      */
-    private List<SDS> zipList2LinkList() {
+    private void zipList2LinkList() {
         List<SDS> linkList = new List<>();
         ZipList zipList = (ZipList) ptr;
         int len = zipList.zlLen();
@@ -140,7 +140,7 @@ public class RedisList extends RedisObject {
         }
 
         encoding = RedisEnc.LINKEDLIST.VAL();
-        return linkList;
+        ptr =  linkList;
     }
 
     /**
@@ -300,5 +300,7 @@ public class RedisList extends RedisObject {
         printAllItem(list);
 
     }
+
+
 
 }
