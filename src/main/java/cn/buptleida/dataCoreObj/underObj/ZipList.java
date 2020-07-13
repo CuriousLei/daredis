@@ -496,13 +496,31 @@ public class ZipList implements RedisObj {
             pos += entry.size();
         }
         for (; pos <= tail; pos += entry.size()) {
-            entry = getEntry(pos);
+            if((entry = getEntry(pos))==null) return null;
             flag = -flag;
             if (flag > 0) continue;
             byte[] element = getNodeVal_ByteArr(entry);
             if (bytesEqual(element, arr)) return entry;
         }
         return null;
+    }
+
+    /**
+     * 根据当前结点的start— position，获取前一个结点的start— position
+     *
+     * @return
+     */
+    public int getPrePos(int pos) {
+        if (pos <= 10) return -1;
+        int flagByte = (int) readInt(elementData, pos, 1);
+        if (flagByte == 255) return -1;
+        int preSize;
+        if (flagByte == 254) {
+            preSize = (int) readInt(elementData, pos + 1, 4);
+        } else {
+            preSize = (int) readInt(elementData, pos, 1);
+        }
+        return pos - preSize;
     }
 
 

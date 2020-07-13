@@ -164,7 +164,7 @@ public class RedisHash extends RedisObject {
      * 传参elementSize：当前添加的结点的长度；
      * 检查是否满足转换条件
      * 进行zipList和linkedList之间的转换;
-     * 只在，添加元素且当前是zipList，删除元素且当前是linkList，这两种情况下调用
+     * 只在，添加元素且当前是zipList，这种情况下调用
      */
     private void checkVary(int elementSize) {
         if (encoding == RedisEnc.ZIPLIST.VAL()) {

@@ -53,9 +53,9 @@ public class SkipList<T extends Comparable<? super T>>  implements RedisObj {
      * @param score && obj
      * @return 插入的节点
      */
-    public SkipListNode zslInsert(double score, T obj) {
+    public SkipListNode zslInsert(Double score, T obj) {
         int levelHeight = getRandomHeight();
-        if(score==2.6) System.out.println(levelHeight);
+        //if(score==2.6) System.out.println(levelHeight);
         SkipListNode<T> target = new SkipListNode<>(obj, levelHeight, score);
         //设置一个update[]，大小为max(levelHeight,maxLevel)，对于新节点来说，update[i] 表示将新节点第i层插入到update[i]节点后面
         SkipListNode[] update = new SkipListNode[Math.max(levelHeight, maxLevelHeight)];
@@ -194,6 +194,8 @@ public class SkipList<T extends Comparable<? super T>>  implements RedisObj {
      * 根据分值范围，返回第一个符合范围的节点
      * @param fromScore
      * @param toScore
+     * @param node 表示从哪个结点开始访问
+     * @param k 表示从哪个索引层开始访问
      * @return
      */
     public SkipListNode<T> zslFirstInRange(double fromScore, double toScore, SkipListNode<T> node, int k) {
@@ -235,6 +237,14 @@ public class SkipList<T extends Comparable<? super T>>  implements RedisObj {
         return zslFirstInRange(score, score, node, k);
     }
 
+    public SkipListNode<T> getHeader() {
+        return header;
+    }
+
+    public int getMaxLevelHeight() {
+        return maxLevelHeight;
+    }
+
     /**
      * 测试
      * @param args
@@ -271,10 +281,10 @@ public class SkipList<T extends Comparable<? super T>>  implements RedisObj {
     /**
      * 输出整个跳表
      */
-    private static void printSkipList(SkipList<Integer> skipList) {
+    public static void printSkipList(SkipList<?> skipList) {
         System.out.println("length:" + skipList.length);
         System.out.println("maxLevel:" + skipList.maxLevelHeight);
-        SkipListNode<Integer> temp = skipList.header;
+        SkipListNode<?> temp = skipList.header;
         while (temp != null) {
             System.out.println();
             System.out.print(" score:" + temp.getScore());

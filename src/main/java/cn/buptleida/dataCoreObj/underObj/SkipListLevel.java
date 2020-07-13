@@ -1,6 +1,6 @@
 package cn.buptleida.dataCoreObj.underObj;
 
-class SkipListLevel{
+public class SkipListLevel{
 
     //前进指针
     private SkipListNode forward;
