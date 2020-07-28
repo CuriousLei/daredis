@@ -6,6 +6,7 @@ import cn.buptleida.dataCoreObj.enumerate.RedisType;
 import cn.buptleida.dataCoreObj.enumerate.Status;
 import cn.buptleida.dataCoreObj.underObj.*;
 
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 
 public class RedisZSet extends RedisObject {
@@ -279,6 +280,8 @@ public class RedisZSet extends RedisObject {
 
     public static void main(String[] args) {
         RedisZSet redisZSet = new RedisZSet();
+        // Class aClass = redisZSet.getClass();
+        // Field[] fields = aClass.getFields();
         redisZSet.zAdd("leida",98.5);
         redisZSet.zAdd("qihang",87.6);
         redisZSet.zAdd("huyiran",92.4);

@@ -31,12 +31,12 @@ public class RedisString extends RedisObject {
         }
 
         SDS temp = (SDS) ptr;
-        return new String(temp.getBuf());
+        return new String(temp.getArray());
     }
     /**
      * 拼接字符串
      */
-    public void append(String extStr){
+    public int append(String extStr){
         if(encoding == RedisEnc.INT.VAL()){
             LongInt item = (LongInt) ptr;
             char[] newStr = Long.toString(item.getVal()).toCharArray();
@@ -47,28 +47,29 @@ public class RedisString extends RedisObject {
 
             encoding = RedisEnc.RAW.VAL();
             ptr = new SDS(newStr);
-            return;
+            return newStr.length;
         }
         SDS item = (SDS) ptr;
-        item.append(extStr.toCharArray(),0,extStr.length());
+        SDS newSDS = item.append(extStr.toCharArray(),0,extStr.length());
+        return newSDS.len();
     }
     /**
      * 加法计算
      */
-    public boolean incrby(){
-        if(encoding != RedisEnc.INT.VAL()) return false;
+    public Long incrby(){
+        if(encoding != RedisEnc.INT.VAL()) return null;
         LongInt value = (LongInt) ptr;
         value.setVal(value.getVal() + 1);
-        return true;
+        return value.getVal();
     }
     /**
      * 减法计算
      */
-    public boolean decrby(){
-        if(encoding != RedisEnc.INT.VAL()) return false;
+    public Long decrby(){
+        if(encoding != RedisEnc.INT.VAL()) return null;
         LongInt value = (LongInt) ptr;
         value.setVal(value.getVal() - 1);
-        return true;
+        return value.getVal();
     }
     /**
      * 返回字符串长度
