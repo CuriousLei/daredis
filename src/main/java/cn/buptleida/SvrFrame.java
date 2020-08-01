@@ -1,16 +1,20 @@
 package cn.buptleida;
 
+import cn.buptleida.database.RedisServer;
 import cn.buptleida.nio.IOService;
 
 import java.io.IOException;
 
 public class SvrFrame {
     public static void main(String[] args) throws Exception {
-        String ConfigIp;
-        int ConfigPort;
+        //初始化数据结构
+        RedisServer.init();
+        RedisServer.initDB(0);
+        //初始化IO模块
+        initNetwork(args[0],Integer.parseInt(args[1]));
+    }
 
-        ConfigIp = args[0];
-        ConfigPort = Integer.parseInt(args[1]);
+    private static void initNetwork(String ConfigIp,int ConfigPort){
         System.out.println(ConfigIp+":"+ConfigPort);
 
         IOService ioService = new IOService(ConfigIp, ConfigPort);
@@ -23,6 +27,5 @@ public class SvrFrame {
         }
 
         ioService.start();
-        System.out.println("xxxxxxxxxxxxxxxxxxx CHAT SERVER is running xxxxxxxxxxxxxxxxxxxxx");
     }
 }

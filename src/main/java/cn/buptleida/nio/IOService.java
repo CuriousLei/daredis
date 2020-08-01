@@ -94,18 +94,7 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
 
     @Override
     public void NewMsgCallBack(ClientHandler srcClient, String msg) {
-        // routeThreadExecutor.execute(() -> {
-        //     synchronized (IOService.this) {
-        //         //将用户发来的消息转发给其它用户
-        //         for (ClientHandler destClient : clientHandlerList) {
-        //             if (srcClient == destClient) {
-        //                 continue;
-        //             }
-        //             //System.out.println(destClient.getUid());
-        //             destClient.write(srcClient.getUid() + " : " + msg);
-        //         }
-        //     }
-        // });
+
     }
     /**
      * 监听客户端连接请求的线程

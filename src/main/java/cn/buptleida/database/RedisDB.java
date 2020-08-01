@@ -7,6 +7,8 @@ import cn.buptleida.dataCoreObj.enumerate.Status;
 import cn.buptleida.dataCoreObj.underObj.Dict;
 import cn.buptleida.dataCoreObj.underObj.SDS;
 
+import java.util.Arrays;
+
 public class RedisDB {
 
     //数据库的键空间
@@ -15,33 +17,53 @@ public class RedisDB {
     public RedisDB() {
         this.dict = new Dict<>();
     }
+    //键命令
+
+    /**
+     * 获取所有键
+     * @param params
+     * @return
+     */
+    public String KEYS(String ... params){
+        String pattern = params[0];
+
+        if(pattern.equals("*")){
+            Object[] objList = dict.getAllKeys();
+            return Arrays.toString(objList);
+        }
+        return null;
+    }
 
     //String相关命令
 
-
-
     /**
      * 插入键值对
-     *
-     * @param key
-     * @param val
+     * @param params{key, val}
+     * @return
      */
-    public int SET(String key, String val) {
+    public String SET(String ... params) {
+        String key = params[0];
+        String val = params[1];
+
         SDS keySds = new SDS(key.toCharArray());
 
+        //Long.parseLong(val);
         RedisString valStr = new RedisString(val);
         dict.put(keySds, valStr);
 
-        return Status.SUCCESS;
+        return "+OK";
     }
+
 
     /**
      * 根据键获取对应的值
      *
-     * @param key
+     * @param params{key}
      * @return
      */
-    public String GET(String key) {
+    public String GET(String ... params) {
+        String key = params[0];
+
         RedisString val = getValByKey(key);
         if(val == null) return null;
         return val.get();
@@ -50,11 +72,13 @@ public class RedisDB {
     /**
      * 拼接字符串
      *
-     * @param key
-     * @param extStr
+     * @param params{key,extStr}
      * @return 返回新字符串的长度
      */
-    public int APPEND(String key, String extStr) {
+    public int APPEND(String ... params) {
+        String key = params[0];
+        String extStr = params[1];
+
         RedisString val = getValByKey(key);
         if(val == null){//不存在则直接SET一个新字符串
             SET(key,extStr);
@@ -66,10 +90,12 @@ public class RedisDB {
 
     /**
      * 根据给定键，返回对应的字符串长度
-     * @param key
+     * @param params{key}
      * @return
      */
-    public int STRLEN(String key) {
+    public int STRLEN(String ... params) {
+        String key = params[0];
+
         RedisString val = getValByKey(key);
 
         return val.strlen();
@@ -77,10 +103,12 @@ public class RedisDB {
 
     /**
      * 将 key 中储存的数字值增一
-     * @param key
+     * @param params{key}
      * @return 增一后的结果
      */
-    public long INCR(String key){
+    public long INCR(String ... params){
+        String key = params[0];
+
         RedisString val = getValByKey(key);
         if(val==null){
             SET(key,"0");
@@ -89,11 +117,13 @@ public class RedisDB {
         return val.incrby();
     }
     /**
-     * 将 key 中储存的数字值增一
-     * @param key
-     * @return 增一后的结果
+     * 将 key 中储存的数字值减一
+     * @param params{key}
+     * @return 减一后的结果
      */
-    public long DECR(String key){
+    public long DECR(String ... params){
+        String key = params[0];
+
         RedisString val = getValByKey(key);
         if(val==null){
             SET(key,"0");
@@ -110,5 +140,9 @@ public class RedisDB {
         if (val.getType() != RedisType.STRING.VAL())
             return null;
         return (RedisString) val;
+    }
+
+    public static void main(String[] args) {
+
     }
 }

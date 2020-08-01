@@ -1,14 +1,12 @@
 package cn.buptleida.nio.clihdl;
 
+import cn.buptleida.database.RedisClient;
+import cn.buptleida.database.RedisServer;
 import cn.buptleida.nio.core.Connector;
-import cn.buptleida.nio.core.ioArgs;
 import cn.buptleida.util.CloseUtil;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 
 public class ClientHandler extends Connector {
@@ -17,11 +15,15 @@ public class ClientHandler extends Connector {
     private final String uid;
     private final ClientHandlerCallBack clientHandlerCallBack;
 
+    private RedisClient client;
+
     public ClientHandler(SocketChannel socketChannel, ClientHandlerCallBack clientHandlerCallBack, String uid) throws IOException {
         this.uid = uid;
         this.clientHandlerCallBack = clientHandlerCallBack;
-        setup(socketChannel);
 
+        this.client = new RedisClient();
+
+        setup(socketChannel);
     }
 
     public interface ClientHandlerCallBack {
@@ -40,10 +42,16 @@ public class ClientHandler extends Connector {
     @Override
     protected void onReceiveFromCore(String msg) {
         super.onReceiveFromCore(msg);
-
         System.out.println("收到："+msg);
 
-        clientHandlerCallBack.NewMsgCallBack(ClientHandler.this, msg);
+
+        try {
+            String returnMsg = RedisServer.commandExecute(client,msg);
+            write(returnMsg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //clientHandlerCallBack.NewMsgCallBack(ClientHandler.this, msg);
 
         //回调完再次注册，读取下一条数据
         //必须要这样
@@ -58,8 +66,11 @@ public class ClientHandler extends Connector {
         exitSelf();
     }
 
-
-    public void write(String msg) {
+    /**
+     * 向客户端返回数据
+     * @param msg
+     */
+    private void write(String msg) {
         System.out.println("发送："+msg);
         send(msg);
     }

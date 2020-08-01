@@ -8,18 +8,40 @@ import cn.buptleida.dataCoreObj.underObj.LongInt;
 import cn.buptleida.dataCoreObj.underObj.SDS;
 
 import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RedisString extends RedisObject {
 
-    public RedisString(long val) {
+    public RedisString(Long val) {
         this.type = RedisType.STRING.VAL();
         this.encoding = RedisEnc.INT.VAL();
         this.ptr = new LongInt(val);
     }
     public RedisString(String str) {
-        this.type = RedisType.STRING.VAL();
-        this.encoding = RedisEnc.RAW.VAL();
-        this.ptr = new SDS(str.toCharArray());
+        if(!isNumeric(str)){
+            this.type = RedisType.STRING.VAL();
+            this.encoding = RedisEnc.RAW.VAL();
+            this.ptr = new SDS(str.toCharArray());
+        }else{
+            this.type = RedisType.STRING.VAL();
+            this.encoding = RedisEnc.INT.VAL();
+            this.ptr = new LongInt(Long.parseLong(str));
+        }
+
+    }
+
+    /**
+     * 判断字符串是否能转换为整型
+     * @param str
+     * @return
+     */
+    private boolean isNumeric(String str){
+        Pattern pattern = Pattern.compile("[0-9]*");
+        Matcher isNum = pattern.matcher(str);
+        if(isNum.matches())
+            return true;
+        return false;
     }
     /**
      * 返回字符串值

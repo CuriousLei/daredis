@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Random;
 
 public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
@@ -179,6 +181,26 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
         return entry.getKey();
     }
 
+    /**
+     * 获取所有键
+     * @return
+     */
+    public Object[] getAllKeys(){
+        int index = 0;
+        Object[] res = new Object[ht.getUsed()];
+        for(int i =0;i<ht.table.length;++i){
+            for (DictHt.Entry<?, ?> e = ht.table[i]; e != null; e = e.next) {
+                res[index++] = e.getKey();
+            }
+        }
+        for(int i =0;i<htBac.table.length;++i){
+            for (DictHt.Entry<?, ?> e = htBac.table[i]; e != null; e = e.next) {
+                res[index++] = e.getKey();
+            }
+        }
+        return res;
+    }
+
     private void dictRehash(int n) {
         if (!isRehashing()) return;
         //进行n步rehash
@@ -243,16 +265,20 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
         SDS key = new SDS(str.toCharArray());
         System.out.println("sds "+(key.equals(sds)));
         dict.put(sds,null);
-
+        String str1 = "qihang";
+        SDS sds1 = new SDS(str1.toCharArray());
+        SDS key1 = new SDS(str1.toCharArray());
+        dict.put(key1,sds1);
+        System.out.println(Arrays.toString(dict.getAllKeys()));
         // dict.put("qihang",98);
         // dict.put("mky",98);
         // dict.put("hyr",98);
         // dict.put("zzy",98);
         // dict.put("duenbo",98);
         //System.out.println(dict.exist(sds));
-        System.out.println(dict.exist(sds));
-        System.out.println(dict.exist(key));
-        printDictInfo(dict);
+        // System.out.println(dict.exist(sds));
+        // System.out.println(dict.exist(key));
+        // printDictInfo(dict);
         //systemRead(dict);
     }
 

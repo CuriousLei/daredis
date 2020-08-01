@@ -64,17 +64,13 @@ public class ioSelectorProvider implements ioProvider {
                         } else if(inRegInput.get()){
                              waitSelection(inRegInput);
                         }
-
-                        //System.out.println(n+"个read就绪");
                         Iterator<SelectionKey> iterator = readSelector.selectedKeys().iterator();
-                        //System.out.println("selectedKeys数量："+readSelector.selectedKeys().size());
                         while (iterator.hasNext()) {
                             SelectionKey key = iterator.next();
                             iterator.remove();//此处格外重要
                             if (key.isValid()) {
                                 // 取消继续对keyOps的监听
                                 key.interestOps(key.readyOps() & ~SelectionKey.OP_READ);
-
 
                                 //线程池执行read操作
                                 inputHandlePool.execute(handlerMap.get(key));
