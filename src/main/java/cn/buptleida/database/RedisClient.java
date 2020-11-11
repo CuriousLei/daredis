@@ -7,6 +7,7 @@ public class RedisClient {
 
     public RedisClient(){
         //使用默认数据库
+
         this.db = RedisServer.db[0];
     }
     public RedisClient(int index){

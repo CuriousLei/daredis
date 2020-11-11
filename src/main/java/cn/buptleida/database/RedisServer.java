@@ -51,14 +51,23 @@ public class RedisServer {
         System.out.println(key+" "+val+" "+strs[2]);
     }
     public static void main(String[] args) throws Exception{
+        RedisServer.init();
+        RedisServer.initDB(0);
 
-        String[] l = new String[]{"ioio","uiuy"};
-        System.out.println(Arrays.toString(l));
-        //commandExcute(null,"SET name leida");
-        // Class<RedisServer> redisServerClass = RedisServer.class;
-        // Method method = redisServerClass.getMethod("test",String[].class);
-        // String[] strs = new String[]{"name","leida","qihang"};
-        // Object o = redisServerClass.newInstance();
-        // method.invoke(o,(Object) strs);
+        RedisClient client = new RedisClient();
+        double start = System.currentTimeMillis();
+        for(int i=0;i<1000;++i){
+            commandExecute(client,"HSET myHt key"+i+" "+i);
+        }
+        double end = System.currentTimeMillis();
+        System.out.println(end-start);
+
+        start = System.currentTimeMillis();
+        for(int i=0;i<1000;++i){
+            commandExecute(client,"HGET myHt key"+i);
+        }
+        end = System.currentTimeMillis();
+        System.out.println(end-start);
+
     }
 }

@@ -14,4 +14,14 @@ public enum RedisType {
     public int VAL(){
         return val;
     }
+    public String getDescByVal(int val){
+        switch (val){
+            case 0 : return "String";
+            case 1 : return "List";
+            case 2 : return "HashTable";
+            case 3 : return "Set";
+            case 4 : return "ZSet";
+        }
+        return null;
+    }
 }

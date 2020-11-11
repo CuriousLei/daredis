@@ -1,11 +1,13 @@
 package cn.buptleida.database;
 
+import cn.buptleida.dataCoreObj.RedisHash;
 import cn.buptleida.dataCoreObj.RedisString;
 import cn.buptleida.dataCoreObj.base.RedisObject;
 import cn.buptleida.dataCoreObj.enumerate.RedisType;
 import cn.buptleida.dataCoreObj.enumerate.Status;
 import cn.buptleida.dataCoreObj.underObj.Dict;
 import cn.buptleida.dataCoreObj.underObj.SDS;
+import cn.buptleida.util.MathUtil;
 
 import java.util.Arrays;
 
@@ -34,7 +36,7 @@ public class RedisDB {
         return null;
     }
 
-    //String相关命令
+    /*----------------------------String相关命令----------------------------*/
 
     /**
      * 插入键值对
@@ -51,7 +53,7 @@ public class RedisDB {
         RedisString valStr = new RedisString(val);
         dict.put(keySds, valStr);
 
-        return "+OK";
+        return SuccessInfo();
     }
 
 
@@ -65,7 +67,7 @@ public class RedisDB {
         String key = params[0];
 
         RedisString val = getValByKey(key);
-        if(val == null) return null;
+        if(val == null) return NotExistInfo(key);
         return val.get();
     }
 
@@ -97,7 +99,7 @@ public class RedisDB {
         String key = params[0];
 
         RedisString val = getValByKey(key);
-
+        if(val==null) return -1;
         return val.strlen();
     }
 
@@ -132,6 +134,84 @@ public class RedisDB {
         return val.decrby();
     }
 
+    /*----------------------------HashTable相关命令----------------------------*/
+    /**
+     * 哈希表插入
+     * @param params
+     * @return
+     */
+    public String HSET(String ... params){
+        String key = params[0];
+        RedisHash ht = getHashValByKey(key);
+        if(ht==null){
+            ht = new RedisHash();
+            dict.put(new SDS(key.toCharArray()),ht);
+        }
+        RedisHash ht2 = getHashValByKey(key);
+        String iVal = params[2];
+        if(MathUtil.isNumeric(iVal)){
+            ht.hSet(params[1],Long.parseLong(iVal));
+        }else{
+            ht.hSet(params[1],iVal);
+        }
+        return SuccessInfo();
+    }
+    /**
+     * 哈希表查找
+     * @param params
+     * @return
+     */
+    public String HGET(String ... params){
+        String key = params[0];
+        RedisHash ht = getHashValByKey(key);
+        if(ht==null){
+            return NotExistInfo(key);
+        }
+        return ht.hGet(params[1]);
+    }
+
+    /**
+     * 哈希表获取长度
+     * @param params
+     * @return
+     */
+    public String HLEN(String ... params){
+        String key = params[0];
+        RedisHash ht = getHashValByKey(key);
+        if(ht==null){
+            return NotExistInfo(key);
+        }
+        return String.valueOf(ht.hLen());
+    }
+
+    /**
+     * 哈希表判断是否存在某键值对
+     * @param params
+     * @return
+     */
+    public String HEXISTS(String ... params){
+        String key = params[0];
+        RedisHash ht = getHashValByKey(key);
+        if(ht==null){
+            return NotExistInfo(key);
+        }
+        return String.valueOf(ht.hExists(params[1]));
+    }
+    public String HDEL(String ... params){
+        String key = params[0];
+        RedisHash ht = getHashValByKey(key);
+        if(ht==null){
+            return NotExistInfo(key);
+        }
+        int status = ht.hDel(params[1]);
+        if(status == 1){
+            return SuccessInfo();
+        }else{
+            return FailureInfo();
+        }
+    }
+
+    /*----------------------------私有方法----------------------------*/
     private RedisString getValByKey(String key) {
         SDS keySds = new SDS(key.toCharArray());
 
@@ -142,7 +222,27 @@ public class RedisDB {
         return (RedisString) val;
     }
 
-    public static void main(String[] args) {
+    private RedisHash getHashValByKey(String key) {
+        SDS keySds = new SDS(key.toCharArray());
 
+        RedisObject val = dict.get(keySds);
+        if (val == null) return null;
+        if (val.getType() != RedisType.HASH.VAL())
+            return null;
+        return (RedisHash) val;
     }
+    private boolean isExist(String key){
+        SDS keySds = new SDS(key.toCharArray());
+        return dict.exist(keySds);
+    }
+    private String NotExistInfo(String key){
+        return "Key: \'"+key+"\' not exist ~";
+    }
+    private String SuccessInfo(){
+        return "OK";
+    }
+    private String FailureInfo(){
+        return "FAIL";
+    }
+
 }

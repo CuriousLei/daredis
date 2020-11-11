@@ -163,13 +163,14 @@ public class ioSelectorProvider implements ioProvider {
         synchronized (locker) {
             if (locker.get()) {
                 try {
-                    System.out.println("flag");
                     //暂停当前线程，直到被唤醒
                     locker.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                System.out.println("nei");
             }
+            System.out.println("wai");
         }
     }
 
@@ -211,8 +212,10 @@ public class ioSelectorProvider implements ioProvider {
     private static void unRegister(SocketChannel channel, Selector selector, HashMap<SelectionKey, Runnable> map) {
         if (channel.isRegistered()) {
             SelectionKey key = channel.keyFor(selector);
-            key.cancel();
-            map.remove(key);
+            if(key!=null){
+                key.cancel();
+                map.remove(key);
+            }
             selector.wakeup();
         }
     }

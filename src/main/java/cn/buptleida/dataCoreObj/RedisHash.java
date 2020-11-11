@@ -207,15 +207,24 @@ public class RedisHash extends RedisObject {
     }
 
     public static void main(String[] args) {
+        pressure(addData());
+    }
+
+    public static RedisHash addData(){
         RedisHash hash = new RedisHash();
-        testDict(hash);
-        // hash.hSet("name","leida");
-        // hash.hSet("age",23);
-        // hash.hSet("level",15);
-        // printAllItem(hash);
-        //
-        // hash.hSet("name","qwertyuiopasdfghjklzxcvbnm1234567");
-        // printAllItem(hash);
+        for(int i=0;i<1000;++i){
+            hash.hSet("key"+i,i);
+        }
+        return hash;
+    }
+
+    public static void pressure(RedisHash hash){
+        double start = System.currentTimeMillis();
+        for(int i=0;i<1000;++i){
+            hash.hGet("key"+i);
+        }
+        double end = System.currentTimeMillis();
+        System.out.println(end-start);
     }
     private static void printAllItem(RedisHash hash) {
         if (hash.encoding == RedisEnc.ZIPLIST.VAL()) {

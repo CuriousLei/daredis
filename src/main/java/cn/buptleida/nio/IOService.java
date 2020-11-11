@@ -63,7 +63,7 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
      */
     public void stop() throws IOException {
         for (ClientHandler client : clientHandlerList) {
-            client.exit();
+            client.close();
         }
         clientHandlerList.clear();
         clientAcceptor.exit();

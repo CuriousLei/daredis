@@ -2,6 +2,7 @@ package cn.buptleida;
 
 import cn.buptleida.nio.core.ioContext;
 import cn.buptleida.nio.impl.ioSelectorProvider;
+import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,5 +47,16 @@ public class Client {
             connector.send(str);
         }
         System.out.println("输出流关闭");
+    }
+
+    @Test
+    public void test(){
+
+        try {
+            DarConnector redisConnector = DarConnector.startWith("127.0.0.1",8008);
+            System.out.println(redisConnector.sendMsg("GET name"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -36,17 +36,21 @@ public class ClientHandler extends Connector {
         //用户传来新消息的回调,NIO模式
         //void NewMsgCallBack(ClientHandler clientHandler, ioArgs args);
     }
+
     /**
      * 收到客户端消息，从nio里面回调，args里面包含buffer字节数组存储数据
      */
     @Override
     protected void onReceiveFromCore(String msg) {
         super.onReceiveFromCore(msg);
-        System.out.println("收到："+msg);
+        //System.out.println("收到：" + msg);
 
 
         try {
-            String returnMsg = RedisServer.commandExecute(client,msg);
+            if (msg.equalsIgnoreCase("exit")) {
+                close();
+            }
+            String returnMsg = RedisServer.commandExecute(client, msg);
             write(returnMsg);
         } catch (Exception e) {
             e.printStackTrace();
@@ -57,6 +61,7 @@ public class ClientHandler extends Connector {
         //必须要这样
         //ioContext.getIoSelector().registerInput(socketChannel, ClientHandler.this);
     }
+
     /**
      * runnable处理里面异常退出的回调
      */
@@ -68,10 +73,11 @@ public class ClientHandler extends Connector {
 
     /**
      * 向客户端返回数据
+     *
      * @param msg
      */
     private void write(String msg) {
-        System.out.println("发送："+msg);
+        //System.out.println("发送：" + msg);
         send(msg);
     }
 
@@ -87,13 +93,9 @@ public class ClientHandler extends Connector {
      * 关闭套接字通道，把自身从对象列表中清除掉
      */
     private void exitSelf() {
-        exit();
-        clientHandlerCallBack.ExitNotify(this);
-    }
 
-    public void exit() {
-        CloseUtil.close(this);
-        System.out.println("客户端已退出");
+        clientHandlerCallBack.ExitNotify(this);
+        System.out.println("客户端" + uid + "已退出");
     }
 
 

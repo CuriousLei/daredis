@@ -107,6 +107,7 @@ class DictHt<K, V> {
 
 
     Entry<K, V> containsKey(K key, int index) {
+        if (index >= table.length || index < 0) return null;
         for (Entry<K, V> e = table[index]; e != null; e = e.next) {
             if (key == e.key || key.equals(e.key)) {
                 return e;

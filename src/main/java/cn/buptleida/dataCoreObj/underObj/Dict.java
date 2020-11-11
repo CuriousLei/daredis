@@ -262,25 +262,9 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
         Dict<SDS, SDS> dict = new Dict<>();
         String str = "leida";
         SDS sds = new SDS(str.toCharArray());
-        SDS key = new SDS(str.toCharArray());
-        System.out.println("sds "+(key.equals(sds)));
-        dict.put(sds,null);
-        String str1 = "qihang";
-        SDS sds1 = new SDS(str1.toCharArray());
-        SDS key1 = new SDS(str1.toCharArray());
-        dict.put(key1,sds1);
-        System.out.println(Arrays.toString(dict.getAllKeys()));
-        // dict.put("qihang",98);
-        // dict.put("mky",98);
-        // dict.put("hyr",98);
-        // dict.put("zzy",98);
-        // dict.put("duenbo",98);
-        //System.out.println(dict.exist(sds));
-        // System.out.println(dict.exist(sds));
-        // System.out.println(dict.exist(key));
-        // printDictInfo(dict);
-        //systemRead(dict);
+        System.out.println(dict.dictContainsKey(sds));
     }
+
 
     public static void printDictInfo(Dict<?,?> dict){
         System.out.println("treHashIdx: "+dict.treHashIdx);
