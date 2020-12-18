@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+group 'cn.buptleida'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile group: 'io.netty', name: 'netty-all', version: '5.0.0.Alpha2'
+}
