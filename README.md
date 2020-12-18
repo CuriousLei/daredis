@@ -1,2 +1,2 @@
 # daredis
-An in-memory database imitating Redis written in JAVA.
+使用JAVA实现的key-value内存数据库，参照Redis的设计思想。
