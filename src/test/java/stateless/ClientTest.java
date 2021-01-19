@@ -15,8 +15,4 @@ public class ClientTest {
 
         System.out.println(res);
     }
-    @Test
-    public void t(){
-        System.out.println("就第三方");
-    }
 }

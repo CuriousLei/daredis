@@ -59,31 +59,6 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
         return provider.registerOutput(channel, outputHandler);
     }
 
-    // @Override
-    // public void setReceiveListener(ioArgs.IoArgsEventListener listener) {
-    //     receiveIoEventListener = listener;
-    // }
-
-    // @Override
-    // public boolean receiveAsync(ioArgs args) throws IOException {
-    //     if (isClosed.get()) {
-    //         throw new IOException("Current channel is closed!");
-    //     }
-    //     receiveArgsTemp = args;
-    //     return provider.registerInput(channel, inputHandler);
-    // }
-
-    // @Override
-    // public boolean sendAsync(ioArgs args, ioArgs.IoArgsEventListener listener) throws IOException {
-    //     if (isClosed.get()) {
-    //         throw new IOException("Current channel is closed!");
-    //     }
-    //
-    //     sendIoEventListener = listener;
-    //
-    //     outputHandler.setAttach(args);
-    //     return provider.registerOutput(channel, outputHandler);
-    // }
 
     @Override
     public void close() throws IOException {

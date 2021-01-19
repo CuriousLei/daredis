@@ -94,7 +94,7 @@ public class ClientHandler extends Connector {
     private void exitSelf() {
 
         clientHandlerCallBack.ExitNotify(this);
-        System.out.println("client:" + uid + "exited");
+        System.out.println("client:" + uid + " 已退出");
     }
 
 

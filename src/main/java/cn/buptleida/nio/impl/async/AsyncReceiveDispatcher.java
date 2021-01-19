@@ -39,7 +39,6 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
     }
 
     private void registerReceive() {
-
         try {
             receiver.postReceiveAsync();
         } catch (IOException e) {
@@ -64,35 +63,15 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
     }
 
 
-    // private ioArgs.IoArgsEventListener ioArgsEventListener = new ioArgs.IoArgsEventListener() {
-    //     @Override
-    //     public void onStarted(ioArgs args) {
-    //         int receiveSize;
-    //         if (packetTemp == null) {
-    //             receiveSize = 4;
-    //         } else {
-    //             receiveSize = Math.min(total - position, args.capacity());
-    //         }
-    //         //设置接受数据大小
-    //         args.setLimit(receiveSize);
-    //     }
-    //
-    //     @Override
-    //     public void onCompleted(ioArgs args) {
-    //         assemblePacket(args);
-    //         //继续接受下一条数据，因为可能同一个消息可能分隔在两份IoArgs中
-    //         registerReceive();
-    //     }
-    // };
-
     /**
      * 解析数据到packet
      * @param args
      */
     private void assemblePacket(ioArgs args) {
-        if (packetTemp == null) {
-            int length = args.readLength();
+        if (packetTemp == null) {//首包
+            int length = args.readLength();//消息体长度
             packetTemp = new StringReceivePacket(length);
+            //packetTemp.open()是获取一个输出流ByteArrayOutputStream
             channel = Channels.newChannel(packetTemp.open());
 
             buffer = new byte[length];
@@ -138,7 +117,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
         } else {
             receiveSize = (int) Math.min(total - position, args.capacity());
         }
-        //设置接受数据大小
+        //设置接受数据大小，这一步很关键，通过设置limit将缓冲区分割，从而解决粘包问题
         args.setLimit(receiveSize);
         return args;
     }
@@ -150,7 +129,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
 
     @Override
     public void onConsumeCompleted(ioArgs args) {
-        assemblePacket(args);
-        registerReceive();
+        assemblePacket(args);// 从buffer中读取数据
+        registerReceive();// 如果数据未读取完，继续注册receive
     }
 }

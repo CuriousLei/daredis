@@ -32,7 +32,7 @@ public class Client {
     /**
      * 输出流方法
      */
-    private static void write(NIOConnector connector) throws IOException {
+    public static void write(NIOConnector connector) throws IOException {
         //构建键盘输入流
         InputStream in = System.in;
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));

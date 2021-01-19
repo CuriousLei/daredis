@@ -8,8 +8,8 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 
 public class ioArgs {
-    private int limit = 256;
-    private byte[] byteBuffer = new byte[256];
+    private int limit = 256*256;
+    private byte[] byteBuffer = new byte[256*256];
     private ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
     private String srcUid;
 
@@ -137,7 +137,12 @@ public class ioArgs {
         finishWriting();
     }
 
+    /**
+     * 获取消息体的长度
+     * @return
+     */
     public int readLength(){
+        //读取内部position开始的四个字节以int值返回，即获取首部
         return buffer.getInt();
     }
 
