@@ -1,7 +1,7 @@
 package stateless;
 
 import cn.buptleida.nio.IOClient;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 

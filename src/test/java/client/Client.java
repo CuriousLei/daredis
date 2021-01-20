@@ -2,7 +2,6 @@ package client;
 
 import cn.buptleida.nio.core.ioContext;
 import cn.buptleida.nio.impl.ioSelectorProvider;
-import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;

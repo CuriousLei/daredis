@@ -5,7 +5,7 @@ import client.NIOConnector;
 import cn.buptleida.nio.IOClient;
 import cn.buptleida.nio.core.ioContext;
 import cn.buptleida.nio.impl.ioSelectorProvider;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Jedis;
 
 import java.io.*;
