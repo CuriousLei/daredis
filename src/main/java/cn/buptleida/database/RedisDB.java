@@ -18,8 +18,8 @@ public class RedisDB {
     public RedisDB() {
         this.dict = new Dict<>();
     }
-    //键命令
 
+    /*----------------------------键命令----------------------------*/
     /**
      * 获取所有键
      * @param params
@@ -27,12 +27,20 @@ public class RedisDB {
      */
     public String KEYS(String ... params){
         String pattern = params[0];
-
+        Object[] objList = null;
         if(pattern.equals("*")){
-            Object[] objList = dict.getAllKeys();
-            return Arrays.toString(objList);
+            objList = dict.getAllKeys();
         }
-        return null;
+        StringBuilder stb = new StringBuilder();
+        int i=0;
+        for(Object str : objList){
+            SDS item = (SDS) str;
+            stb.append((++i)+") ");
+            stb.append(item.getArray());
+            stb.append("\r\n");
+        }
+        if(stb.length()==0) return "(empty list or set)";
+        return stb.toString();
     }
 
     /*----------------------------String相关命令----------------------------*/
@@ -101,7 +109,6 @@ public class RedisDB {
         if(val==null) return -1;
         return val.strlen();
     }
-
     /**
      * 将 key 中储存的数字值增一
      * @param params{key}
@@ -157,8 +164,8 @@ public class RedisDB {
     }
     /**
      * 哈希表查找
-     * @param params
-     * @return
+     * @param params 输入键
+     * @return 返回值
      */
     public String HGET(String ... params){
         String key = params[0];
@@ -172,7 +179,7 @@ public class RedisDB {
     /**
      * 哈希表获取长度
      * @param params
-     * @return
+     * @return 返回长度值
      */
     public String HLEN(String ... params){
         String key = params[0];
@@ -196,6 +203,12 @@ public class RedisDB {
         }
         return String.valueOf(ht.hExists(params[1]));
     }
+
+    /**
+     * 哈希表删除键值对
+     * @param params
+     * @return
+     */
     public String HDEL(String ... params){
         String key = params[0];
         RedisHash ht = getHashValByKey(key);

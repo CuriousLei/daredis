@@ -57,7 +57,7 @@ public class TimeConsumeTest {
             res.append(line);
         }
         reader.close();
-        return res.toString().substring(0,30);
+        return res.toString();
 
     }
 

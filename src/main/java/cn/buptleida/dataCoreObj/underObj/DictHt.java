@@ -84,7 +84,7 @@ class DictHt<K, V> {
 
         //满足条件时，通知Dict进行rehash
         if (used >= size && (dict_can_resize || used / size >= DICT_FORCE_RESIZE_RATIO)) {
-            dict.dictExpandIfNeed(2 * size);
+            dict.dictExpandIfNeed(2 * used);
         }
     }
 

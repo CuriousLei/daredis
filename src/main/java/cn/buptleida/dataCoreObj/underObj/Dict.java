@@ -185,7 +185,7 @@ public class Dict<K, V> implements DictHt.DictCallBack, RedisObj {
      */
     public Object[] getAllKeys(){
         int index = 0;
-        Object[] res = new Object[ht.getUsed()];
+        Object[] res = new Object[dictSize()];
         for(int i =0;i<ht.table.length;++i){
             for (DictHt.Entry<?, ?> e = ht.table[i]; e != null; e = e.next) {
                 res[index++] = e.getKey();

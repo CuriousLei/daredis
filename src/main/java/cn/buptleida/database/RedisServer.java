@@ -2,31 +2,49 @@ package cn.buptleida.database;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class RedisServer {
 
     private static int dbNum = 16;
     public static RedisDB[] db;
-
+    public static ConcurrentLinkedDeque<String[]> commandsQueue;
     public static void init(){
         db = new RedisDB[dbNum];
+        commandsQueue = new ConcurrentLinkedDeque<>();
     }
 
     public static void initDB(int index){
-        db[index] = new RedisDB();
+        if(db[index]==null) db[index] = new RedisDB();
     }
 
-    public static String commandExecute(RedisClient client, String command) throws Exception {
+    /**
+     * 执行命令的方法
+     * @param client
+     * @param commandStr
+     * @return
+     * @throws Exception
+     */
+    public static String commandExecute(RedisClient client, String commandStr) throws Exception {
+        String[] command = commandStr.split(" ");
+        return commandExecute(client,command);
+    }
+    public static String commandExecute(RedisClient client, String[] command) throws Exception {
 
-        String[] commands = command.split(" ");
-        String commandName = commands[0];
-        String[] params = Arrays.copyOfRange(commands,1,commands.length);
-
+        String commandName = command[0];
+        String[] params = Arrays.copyOfRange(command,1,command.length);
+        if(commandName.equalsIgnoreCase("select")){
+            int index = Integer.parseInt(params[0]);
+            initDB(index);
+            client.setDb(db[index]);
+            return "SWITCHED TO DB"+index;
+        }
         Object database = client.getDb();
         Class<RedisDB> redisDBClass = RedisDB.class;
         Method method = redisDBClass.getMethod(commandName, String[].class);
-
         Object returnValue =  method.invoke(database,(Object) params);
+
+        if(!client.isFake()) commandsQueue.offer(command);
         return toStr(returnValue);
     }
 

@@ -36,11 +36,12 @@ public class ioSelectorProvider implements ioProvider {
         this.writeSelector = Selector.open();
 
         //建立线程池
-        inputHandlePool = Executors.newFixedThreadPool(4,
-                new IoProviderThreadFactory("IoProvider-Input-Thread-Pool"));
-        outputHandlePool = Executors.newFixedThreadPool(4,
-                new IoProviderThreadFactory("IoProvider-Output-Thread-Pool"));
-
+        // inputHandlePool = Executors.newFixedThreadPool(4,
+        //         new IoProviderThreadFactory("IoProvider-Input-Thread-Pool"));
+        // outputHandlePool = Executors.newFixedThreadPool(4,
+        //         new IoProviderThreadFactory("IoProvider-Output-Thread-Pool"));
+        inputHandlePool = Executors.newSingleThreadExecutor(new IoProviderThreadFactory("IoProvider-Input-Thread-Pool"));
+        outputHandlePool = Executors.newSingleThreadExecutor(new IoProviderThreadFactory("IoProvider-Output-Thread-Pool"));
         //建立两个线程，执行输入和输出的select
         startRead();
         startWrite();

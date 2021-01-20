@@ -10,12 +10,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class Client {
+    private static final String ServerIp = "127.0.0.1";
+    private static final int ServerPort = 8008;
     public static void main(String[] args)throws IOException {
 
         ioContext.setIoSelector(new ioSelectorProvider());
-
-        String ServerIp = "127.0.0.1";
-        int ServerPort = 8008;
 
         try {
             NIOConnector connector = NIOConnector.startWith(ServerIp,ServerPort);

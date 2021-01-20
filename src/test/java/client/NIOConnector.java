@@ -17,7 +17,7 @@ public class NIOConnector extends Connector {
     protected void onReceiveFromCore(String msg) {
         super.onReceiveFromCore(msg);
         //输出收到的消息
-        System.out.println("接收到: "+msg);
+        System.out.println(msg);
     }
 
     @Override
