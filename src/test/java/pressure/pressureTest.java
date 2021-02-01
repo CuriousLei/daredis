@@ -1,6 +1,7 @@
 package pressure;
 
 import client.NIOConnector;
+import cn.buptleida.nio.IOClient;
 import cn.buptleida.nio.core.ioContext;
 import cn.buptleida.nio.impl.ioSelectorProvider;
 
@@ -16,11 +17,11 @@ public class pressureTest {
         String ServerIp = "127.0.0.1";
         int ServerPort = 8008;
 
-        List<NIOConnector> ClientList = new ArrayList<>();
-        for (int i = 0; i < 100; ++i) {
+        List<IOClient> ClientList = new ArrayList<>();
+        for (int i = 0; i < 50; ++i) {
             System.out.println(i);
             try {
-                NIOConnector client = NIOConnector.startWith(ServerIp,ServerPort);
+                IOClient client = IOClient.startWith(ServerIp,ServerPort);
                 if (client == null) {
                     throw new NullPointerException();
                 }
@@ -40,13 +41,14 @@ public class pressureTest {
 
         systemRead();
 
+
         Runnable runnable = () -> {
             while (!done) {
                 int i=0;
                 long now = System.currentTimeMillis();
-                for (NIOConnector client : ClientList) {
+                for (IOClient client : ClientList) {
                     //client.send("SET "+"name"+i+" "+i*i);
-                    client.send("GET name");
+                    client.sendMsg("GET age");
                     i++;
                 }
                 // try {
@@ -72,7 +74,7 @@ public class pressureTest {
             e.printStackTrace();
         }
 
-        for (NIOConnector client : ClientList) {
+        for (IOClient client : ClientList) {
             try {
                 client.close();
             } catch (IOException e) {

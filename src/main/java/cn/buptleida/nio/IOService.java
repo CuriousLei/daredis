@@ -38,6 +38,8 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
         selector = Selector.open();
         //开启一个channel用于监听客户端连接请求
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        // serverSocketChannel.socket().setReceiveBufferSize(64*1024*1024);
+        // serverSocketChannel.socket().setPerformancePreferences(1,1,0);
         //设置为非阻塞
         serverSocketChannel.configureBlocking(false);
         //绑定本地ip端口
@@ -127,6 +129,8 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
                             ServerSocketChannel serverChannel = (ServerSocketChannel)key.channel();
                             //通过accept获取socketChannel，对应于一个客户端
                             SocketChannel socketChannel = serverChannel.accept();
+                            socketChannel.socket().setReceiveBufferSize(64*1024);
+                            socketChannel.socket().setSendBufferSize(64*1024);
 
                             String uuid = UUID.randomUUID().toString();//为客户端生成唯一标识
                             System.out.println("已接受连接client:" + uuid

@@ -121,6 +121,7 @@ public class ioArgs {
     public int writeTo(SocketChannel channel) throws IOException {
         int byteProduced = 0;
         while (buffer.hasRemaining()) {
+            //int len = channel.write(buffer);
             int len = channel.write(buffer);
             //System.out.println("发送长度"+len);
             if (len < 0) {

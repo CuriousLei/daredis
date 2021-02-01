@@ -10,8 +10,8 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AOF {
-    private static final String AOF_FILE_PATH = "C:\\_study\\repo\\daredis\\src\\main\\resources\\aof\\appendonly.aof";
-    private static final String CMD_PATH = "C:\\_study\\repo\\daredis\\src\\main\\resources\\aof\\modifyingCmd";
+    private static String AOF_FILE_PATH;
+    private static String CMD_PATH;
     private static final Exception EXCEPTION = new Exception("AOF格式错误！");
     private static final AtomicBoolean isClosed = new AtomicBoolean(false);
 
@@ -41,7 +41,13 @@ public class AOF {
     public static void startup() {
         HashSet<String> commandsSet = new HashSet<>();
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(new File(CMD_PATH)));
+            BufferedReader reader;
+            if(CMD_PATH.charAt(1)==':'){
+                reader = new BufferedReader(new FileReader(new File(CMD_PATH)));
+            }else{
+                InputStream is = AOF.class.getResourceAsStream(CMD_PATH);
+                reader = new BufferedReader(new InputStreamReader(is));
+            }
             String cmd = null;
             while((cmd=reader.readLine())!=null){
                 commandsSet.add(cmd);
@@ -93,5 +99,15 @@ public class AOF {
             stb.append("\r\n");
         }
         return stb.toString();
+    }
+
+
+    public static void setAofFilePath(String aofFilePath) {
+        AOF_FILE_PATH = aofFilePath;
+    }
+
+
+    public static void setCmdPath(String cmdPath) {
+        CMD_PATH = cmdPath;
     }
 }

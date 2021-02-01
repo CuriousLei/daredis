@@ -42,6 +42,8 @@ public class SvrFrame {
      * AOF持久化:数据恢复+启动
      */
     private static void aofInit(){
+        AOF.setAofFilePath("C:\\_study\\repo\\daredis\\src\\main\\resources\\aof\\appendonly.aof");
+        AOF.setCmdPath("C:\\_study\\repo\\daredis\\src\\main\\resources\\innerConf\\modifyingCmd");
         try {
             AOF.recovery();
         } catch (Exception e) {
