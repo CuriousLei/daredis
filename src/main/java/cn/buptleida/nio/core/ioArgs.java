@@ -8,9 +8,10 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 
 public class ioArgs {
-    private int limit = 256*256;
-    private byte[] byteBuffer = new byte[256*256];
+    private int limit = 256;
+    private byte[] byteBuffer = new byte[256];
     private ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
+    // private final ByteBuffer buffer = ByteBuffer.allocateDirect(256);
     private String srcUid;
 
     public int read(SocketChannel channel) throws IOException {
@@ -178,7 +179,7 @@ public class ioArgs {
          * @return
          */
         ioArgs providerIoArgs();
-
+        boolean isNewIoArgs();
         void onConsumeFailed(ioArgs args, Exception e);
         void onConsumeCompleted(ioArgs args);
     }

@@ -1,6 +1,7 @@
 package cn.buptleida;
 
 import cn.buptleida.database.RedisServer;
+import cn.buptleida.netty.Server;
 import cn.buptleida.nio.IOService;
 import cn.buptleida.persistence.AOF;
 
@@ -15,7 +16,8 @@ public class SvrFrame {
         aofInit();
         //初始化IO模块
         initNetwork(args[0],Integer.parseInt(args[1]));
-
+        //初始化netty模块
+        // initNetty(Integer.parseInt(args[1]));
     }
 
     /**
@@ -36,6 +38,14 @@ public class SvrFrame {
         }
 
         ioService.start();
+    }
+
+    /**
+     * 初始化netty模块
+     * @param ConfigPort
+     */
+    private static void initNetty(int ConfigPort){
+        new Server(ConfigPort).run();
     }
 
     /**

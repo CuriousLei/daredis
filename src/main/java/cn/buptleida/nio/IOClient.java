@@ -87,7 +87,7 @@ public class IOClient extends Connector {
         // }
         // onRecieve.set(false);
         // return res;
-        return "ok";
+        return res;
     }
 
     public static String sendMsgWithIpPort(String serverIp, int serverPort, String msg) throws IOException{

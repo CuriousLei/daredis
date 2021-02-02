@@ -130,24 +130,7 @@ public class AsyncSendDispatcher implements SendDispatcher, cn.buptleida.nio.cor
     }
 
     /**
-     * 接收回调,来自writeHandler输出线程
-     */
-    // private ioArgs.IoArgsEventListener ioArgsEventListener = new ioArgs.IoArgsEventListener() {
-    //     @Override
-    //     public void onStarted(ioArgs args) {
-    //
-    //     }
-    //
-    //     @Override
-    //     public void onCompleted(ioArgs args) {
-    //         //继续发送当前包packetTemp，因为可能一个包没发完
-    //         sendCurrentPacket();
-    //     }
-    // };
-
-
-    /**
-     * 将数据写入ioArgs
+     * 将packet中的数据写入ioArgs
      *
      * @return
      */
@@ -159,43 +142,25 @@ public class AsyncSendDispatcher implements SendDispatcher, cn.buptleida.nio.cor
             //将数据装入channel，open()返回inputStream类型
             channel = Channels.newChannel(packetTemp.open());
             args.setLimit(4);
-            args.writeLength((int) packetTemp.length());
+            args.writeLength((int) packetTemp.length());//首包先写入数据长度
         } else {
             args.setLimit((int) Math.min(args.capacity(), total - position));
-
             try {
                 int count = args.readFrom(channel);
+                // System.out.println("args.readFrom: "+count);
                 position += count;
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
             }
         }
+
         return args;
-
-        // args.startWriting();//将ioArgs缓冲区中的指针设置好
-        //
-        // if (position >= total) {
-        //     sendNextPacket();
-        //     return;
-        // } else if (position == 0) {
-        //     //首包，需要携带长度信息
-        //     args.writeLength(total);
-        // }
-        //
-        // byte[] bytes = packetTemp.bytes();
-        // //把bytes的数据写入到IoArgs中
-        // int count = args.readFrom(bytes, position);
-        // position += count;
-        //
-        // //完成封装
-        // args.finishWriting();//flip()操作
-        // //向通道注册OP_write，将Args附加到runnable中；selector线程监听到就绪即可触发线程池进行消息发送
-        //
-        // sender.setSendListener(this);
-        // return null;
     }
-
+    @Override
+    public boolean isNewIoArgs() {
+        return channel==null;
+    }
     @Override
     public void onConsumeFailed(ioArgs args, Exception e) {
         e.printStackTrace();

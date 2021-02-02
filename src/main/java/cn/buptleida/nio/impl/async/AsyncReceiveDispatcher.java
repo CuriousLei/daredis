@@ -118,8 +118,14 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
             receiveSize = (int) Math.min(total - position, args.capacity());
         }
         //设置接受数据大小，这一步很关键，通过设置limit将缓冲区分割，从而解决粘包问题
+        // System.out.println("接收数据大小："+receiveSize);
         args.setLimit(receiveSize);
         return args;
+    }
+
+    @Override
+    public boolean isNewIoArgs() {
+        return packetTemp==null;
     }
 
     @Override
@@ -130,6 +136,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
     @Override
     public void onConsumeCompleted(ioArgs args) {
         assemblePacket(args);// 从buffer中读取数据
-        registerReceive();// 如果数据未读取完，继续注册receive
+        // registerReceive();// 如果不是首包，且数据未读取完，继续注册receive
     }
+
 }

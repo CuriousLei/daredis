@@ -79,33 +79,28 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
             if (isClosed.get()) {
                 return;
             }
-
             ioArgs.IoArgsEventProcessor processor = receiveIoEventProcessor;
+            if(processor.isNewIoArgs()){//如果是首包，先读取首部，获取数据长度
+                ioArgs args = processor.providerIoArgs();
+                try {
+                    if (args.readFrom(channel) > 0 ) {
+                        processor.onConsumeCompleted(args);
+                    } else {
+                        processor.onConsumeFailed(args,new IOException("Cannot read any data!"));
+                    }
+                } catch (IOException ignored) {
+                    CloseUtil.close(SocketChannelAdapter.this);
+                }
+            }
             ioArgs args = processor.providerIoArgs();
-
             try {
                 // 具体的读取操作
                 if (args.readFrom(channel) > 0 ) {
                     // 读取完成回调
                     processor.onConsumeCompleted(args);
+                    postReceiveAsync();
                 } else {
-                    processor.onConsumeFailed(args,new IOException("Cannot write any data!"));
-                }
-            } catch (IOException ignored) {
-                CloseUtil.close(SocketChannelAdapter.this);
-            }
-
-            ioArgs.IoArgsEventProcessor processor2 = sendIoEventProcessor;
-            ioArgs args2 = processor.providerIoArgs();
-
-
-            try {
-                // 具体的写操作
-                if (args2.writeTo(channel) > 0) {
-                    // 写操作完成回调
-                    processor2.onConsumeCompleted(args);
-                } else {
-                    processor2.onConsumeFailed(args,new IOException("Cannot write any data!"));
+                    processor.onConsumeFailed(args,new IOException("Cannot read any data!"));
                 }
             } catch (IOException ignored) {
                 CloseUtil.close(SocketChannelAdapter.this);
@@ -122,9 +117,17 @@ public class SocketChannelAdapter implements Sender, Receiver, Cloneable {
                 return;
             }
             ioArgs.IoArgsEventProcessor processor = sendIoEventProcessor;
+            if(processor.isNewIoArgs()){//如果是首包，先写入数据长度
+                ioArgs args = processor.providerIoArgs();
+                try {
+                    if (args.writeTo(channel) <= 0) {
+                        processor.onConsumeFailed(args,new IOException("Cannot write any data!"));
+                    }
+                } catch (IOException ignored) {
+                    CloseUtil.close(SocketChannelAdapter.this);
+                }
+            }
             ioArgs args = processor.providerIoArgs();
-
-
             try {
                 // 具体的写操作
                 if (args.writeTo(channel) > 0) {

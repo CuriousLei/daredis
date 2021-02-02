@@ -42,13 +42,13 @@ public class TimeConsumeTest {
             // System.out.println("插入耗时："+(end-start));
             String name = "age";
             start = System.currentTimeMillis();
-            for(int i=0;i<10001;++i){
+            for(int i=0;i<100000;++i){
                 connector.sendMsg("GET "+name);
             }
             //latch.await();
             end = System.currentTimeMillis();
             System.out.println("查询耗时："+(end-start));
-            System.out.println("QPS："+10000/((float)(end-start)/1000));
+            System.out.println("QPS："+100000/((float)(end-start)/1000));
             connector.close();
         }catch (Exception e){
             System.out.println("连接失败，退出");
@@ -82,8 +82,8 @@ public class TimeConsumeTest {
     @Test
     public void jedisGetTest() throws IOException {
         long start,end;
-        // String ServerIp = "127.0.0.1";
-        String ServerIp = "192.168.137.14";
+        String ServerIp = "127.0.0.1";
+        // String ServerIp = "192.168.137.14";
         int ServerPort = 6379;
         Jedis jedis = new Jedis(ServerIp,ServerPort);
         // String name = "name"+System.currentTimeMillis();
@@ -95,12 +95,12 @@ public class TimeConsumeTest {
         // System.out.println("插入耗时："+(end-start));
         String name = "age";
         start = System.currentTimeMillis();
-        for(int i=0;i<10000;++i){
+        for(int i=0;i<100000;++i){
             jedis.get(name);
         }
         end = System.currentTimeMillis();
         System.out.println("查询耗时："+(end-start));
-        System.out.println("QPS："+10000/((float)(end-start)/1000));
+        System.out.println("QPS："+100000/((float)(end-start)/1000));
     }
 
 }
