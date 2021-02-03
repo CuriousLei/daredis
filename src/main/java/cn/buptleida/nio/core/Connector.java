@@ -32,8 +32,11 @@ public class Connector implements Closeable, SocketChannelAdapter.OnChannelStatu
 
     }
 
-    public void send(String msg){
-        SendPacket packet = new StringSendPacket(msg);
+    public void send(Object msg){
+        StringBuilder stb = new StringBuilder();
+        stb.append(msg);
+
+        SendPacket packet = new StringSendPacket(stb.toString());
         sendDispatcher.send(packet);
     }
 

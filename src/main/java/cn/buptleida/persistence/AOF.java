@@ -33,7 +33,8 @@ public class AOF {
                 if (strLen != str.length()) throw EXCEPTION;
                 command[i] = str;
             }
-            RedisServer.commandExecute(fakeClient, command);
+            // RedisServer.INSTANCE.commandExecute(fakeClient, command);
+            RedisServer.INSTANCE.commandExecuteProxy(fakeClient, command);
         }
         reader.close();
     }
@@ -67,7 +68,7 @@ public class AOF {
                     try {
                         BufferedWriter writer = new BufferedWriter(new FileWriter(new File(AOF_FILE_PATH), true));
                         String[] command = null;
-                        while ((command = RedisServer.commandsQueue.poll()) != null) {
+                        while ((command = RedisServer.INSTANCE.commandsQueue.poll()) != null) {
                             if(!commandsSet.contains(command[0])) continue;// 非修改性命令，不需要写入
                             writer.write(catToAOFCommand(command));
                         }

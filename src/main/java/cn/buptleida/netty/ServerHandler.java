@@ -30,7 +30,7 @@ public class ServerHandler extends ChannelHandlerAdapter {
         // String request = new String(data, "utf-8");
         String request = (String)msg;
         //System.out.println("接收到" + request.trim());
-        String returnMsg = RedisServer.commandExecute(client, request.trim());
+        String returnMsg = RedisServer.INSTANCE.commandExecute(client, request.trim());
         System.out.println(returnMsg);
         //String returnMsg = "+OK";
         //ctx.writeAndFlush(Unpooled.copiedBuffer(returnMsg.getBytes()));

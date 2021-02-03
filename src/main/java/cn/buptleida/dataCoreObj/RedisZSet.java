@@ -1,5 +1,6 @@
 package cn.buptleida.dataCoreObj;
 
+import cn.buptleida.dataCoreObj.base.CmdExecutor;
 import cn.buptleida.dataCoreObj.base.RedisObject;
 import cn.buptleida.dataCoreObj.enumerate.RedisEnc;
 import cn.buptleida.dataCoreObj.enumerate.RedisType;
@@ -8,7 +9,7 @@ import cn.buptleida.dataCoreObj.underObj.*;
 
 import java.nio.charset.StandardCharsets;
 
-public class RedisZSet extends RedisObject {
+public class RedisZSet extends RedisObject implements CmdExecutor {
 
     public RedisZSet() {
         this.type = RedisType.ZSET.VAL();

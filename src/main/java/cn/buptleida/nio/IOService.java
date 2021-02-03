@@ -4,8 +4,12 @@ import cn.buptleida.nio.clihdl.ClientHandler;
 import cn.buptleida.nio.core.ioContext;
 import cn.buptleida.nio.impl.ioSelectorProvider;
 import cn.buptleida.util.CloseUtil;
+import jdk.internal.org.objectweb.asm.Type;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketOption;
@@ -166,7 +170,16 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
         }
     }
 
-    public static void main(String[] args) {
+    public void test() {
+        // Class strCLass = Class.forName("String");
+        // File file = new File("/innerConf/modifyingCmd");
+        File file = new File("/innerConf/cmdTable.txt");
+    }
+    public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         System.out.println("测试以下");
+        IOService service = new IOService("127.0.0.1",8008);
+        service.test();
+        Method method = service.getClass().getMethod("test",null);
+        method.invoke(service,null);
     }
 }

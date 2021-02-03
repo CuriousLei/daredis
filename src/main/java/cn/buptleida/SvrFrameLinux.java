@@ -1,5 +1,6 @@
 package cn.buptleida;
 
+import cn.buptleida.conf.CommandMapFactory;
 import cn.buptleida.database.RedisServer;
 import cn.buptleida.nio.IOService;
 import cn.buptleida.persistence.AOF;
@@ -19,8 +20,8 @@ public class SvrFrameLinux {
         //读取配置文件
         Properties pps = getProperties();
         //初始化数据结构
-        RedisServer.init();
-        RedisServer.initDB(0);
+        RedisServer.INSTANCE.init();
+        RedisServer.INSTANCE.initDB(0);
         //AOF启动
         aofInit(pps);
         //初始化IO模块
@@ -74,6 +75,7 @@ public class SvrFrameLinux {
     private static Properties getProperties() throws IOException {
         Properties pps = new Properties();
         pps.load(new FileInputStream("config.properties"));
+        CommandMapFactory.setCmdTablePath("/innerConf/cmdTable.txt");
         return pps;
     }
 

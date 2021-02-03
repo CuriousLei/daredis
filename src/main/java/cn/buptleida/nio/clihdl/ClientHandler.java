@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
 
-public class ClientHandler extends Connector {
+public class ClientHandler extends Connector implements RedisClient.RedisClientCallBack {
 
     //private final Removable removable;
     private final String uid;
@@ -21,8 +21,14 @@ public class ClientHandler extends Connector {
         this.clientHandlerCallBack = clientHandlerCallBack;
 
         this.client = new RedisClient();
+        this.client.setClientHandlerCallBack(this);
 
         setup(socketChannel);
+    }
+
+    @Override
+    public void RedisMsgCallBack(Object msg) {
+        write(msg);
     }
 
     public interface ClientHandlerCallBack {
@@ -49,8 +55,9 @@ public class ClientHandler extends Connector {
             if (msg.equalsIgnoreCase("exit")) {
                 close();
             }
-            String returnMsg = RedisServer.commandExecute(client, msg);
-            write(returnMsg);
+            // String returnMsg = RedisServer.INSTANCE.commandExecute(client, msg);
+            //write(returnMsg);
+            RedisServer.INSTANCE.commandExecute(client, msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -75,7 +82,7 @@ public class ClientHandler extends Connector {
      *
      * @param msg
      */
-    private void write(String msg) {
+    private void write(Object msg) {
         //System.out.println("发送：" + msg);
         send(msg);
     }

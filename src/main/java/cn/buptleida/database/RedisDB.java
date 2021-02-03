@@ -1,16 +1,22 @@
 package cn.buptleida.database;
 
+import cn.buptleida.conf.Command;
+import cn.buptleida.conf.Toast;
 import cn.buptleida.dataCoreObj.RedisHash;
 import cn.buptleida.dataCoreObj.RedisString;
+import cn.buptleida.dataCoreObj.base.CmdExecutor;
 import cn.buptleida.dataCoreObj.base.RedisObject;
 import cn.buptleida.dataCoreObj.enumerate.RedisType;
 import cn.buptleida.dataCoreObj.underObj.Dict;
 import cn.buptleida.dataCoreObj.underObj.SDS;
+import cn.buptleida.util.ConvertUtil;
 import cn.buptleida.util.MathUtil;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 
-public class RedisDB {
+public class RedisDB implements CmdExecutor {
 
     //数据库的键空间
     Dict<SDS, RedisObject> dict;
@@ -26,7 +32,9 @@ public class RedisDB {
      * @return
      */
     public String KEYS(String ... params){
-        String pattern = params[0];
+        return KEYS(params[0]);
+    }
+    public String KEYS(String pattern){
         Object[] objList = null;
         if(pattern.equals("*")){
             objList = dict.getAllKeys();
@@ -47,20 +55,16 @@ public class RedisDB {
 
     /**
      * 插入键值对
-     * @param params{key, val}
+     * @param key
+     * @param val
      * @return
      */
-    public String SET(String ... params) {
-        String key = params[0];
-        String val = params[1];
-
+    public String SET(String key,String val) {
         SDS keySds = new SDS(key.toCharArray());
-
-        //Long.parseLong(val);
         RedisString valStr = new RedisString(val);
         dict.put(keySds, valStr);
 
-        return SuccessInfo();
+        return Toast.SUCCESS;
     }
 
 
@@ -72,9 +76,11 @@ public class RedisDB {
      */
     public String GET(String ... params) {
         String key = params[0];
-
-        RedisString val = getValByKey(key);
-        if(val == null) return NotExistInfo(key);
+        return GET(params[0]);
+    }
+    public String GET(String param) {
+        RedisString val = getValByKey(param);
+        if(val == null) return Toast.NOT_EXIST;
         return val.get();
     }
 
@@ -147,20 +153,17 @@ public class RedisDB {
      * @return
      */
     public String HSET(String ... params){
-        String key = params[0];
-        RedisHash ht = getHashValByKey(key);
+        return HSET(params[0],params[1],params[2]);
+    }
+    public String HSET(String htName, String key,String val){
+
+        RedisHash ht = getHashValByKey(htName);
         if(ht==null){
             ht = new RedisHash();
-            dict.put(new SDS(key.toCharArray()),ht);
+            dict.put(new SDS(htName.toCharArray()),ht);
         }
-        RedisHash ht2 = getHashValByKey(key);
-        String iVal = params[2];
-        if(MathUtil.isNumeric(iVal)){
-            ht.hSet(params[1],Long.parseLong(iVal));
-        }else{
-            ht.hSet(params[1],iVal);
-        }
-        return SuccessInfo();
+        ht.hSet(key,val);
+        return Toast.SUCCESS;
     }
     /**
      * 哈希表查找
@@ -222,8 +225,22 @@ public class RedisDB {
             return FailureInfo();
         }
     }
+    /*----------------------------自身方法----------------------------*/
+    CmdExecutor getExecutorByKey(String key) {
+        SDS keySds = new SDS(key.toCharArray());
 
+        CmdExecutor val = dict.get(keySds);
+        if (val == null) return null;
+        return val;
+    }
+
+    @Override
+    public Object proc(String[] params, Command cmd, Method method, RedisClient client) throws InvocationTargetException, IllegalAccessException {
+
+        return null;
+    }
     /*----------------------------私有方法----------------------------*/
+
     private RedisString getValByKey(String key) {
         SDS keySds = new SDS(key.toCharArray());
 

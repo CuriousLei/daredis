@@ -1,5 +1,6 @@
 package cn.buptleida.dataCoreObj;
 
+import cn.buptleida.dataCoreObj.base.CmdExecutor;
 import cn.buptleida.dataCoreObj.base.RedisObj;
 import cn.buptleida.dataCoreObj.base.RedisObject;
 import cn.buptleida.dataCoreObj.enumerate.RedisEnc;
@@ -11,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 
-public class RedisList extends RedisObject {
+public class RedisList extends RedisObject implements CmdExecutor {
     public RedisList() {
         this.type = RedisType.LIST.VAL();
         this.encoding = RedisEnc.ZIPLIST.VAL();

@@ -1,5 +1,6 @@
 package cn.buptleida.dataCoreObj;
 
+import cn.buptleida.dataCoreObj.base.CmdExecutor;
 import cn.buptleida.dataCoreObj.base.RedisObject;
 import cn.buptleida.dataCoreObj.enumerate.RedisEnc;
 import cn.buptleida.dataCoreObj.enumerate.RedisType;
@@ -10,7 +11,7 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RedisString extends RedisObject {
+public class RedisString extends RedisObject  implements CmdExecutor {
 
     public RedisString(Long val) {
         this.type = RedisType.STRING.VAL();

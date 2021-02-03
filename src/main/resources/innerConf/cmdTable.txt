@@ -1,0 +1,8 @@
+GET,GET,2,r,1,String
+SET,SET,3,w,1,String_String
+HGET,hGet,3,r,0,String
+HSET,HSET,4,w,1,String_String_String
+SELECT,select,2,r,3,int
+KEYS,KEYS,2,r,1,String
+HLEN,hLen,2,r,0,null
+HDEL,hDel,3,w,0,String

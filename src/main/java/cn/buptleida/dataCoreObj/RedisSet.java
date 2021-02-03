@@ -1,5 +1,6 @@
 package cn.buptleida.dataCoreObj;
 
+import cn.buptleida.dataCoreObj.base.CmdExecutor;
 import cn.buptleida.dataCoreObj.base.RedisObject;
 import cn.buptleida.dataCoreObj.enumerate.RedisEnc;
 import cn.buptleida.dataCoreObj.enumerate.RedisType;
@@ -10,7 +11,7 @@ import cn.buptleida.dataCoreObj.underObj.SDS;
 
 import java.util.Arrays;
 
-public class RedisSet extends RedisObject {
+public class RedisSet extends RedisObject implements CmdExecutor {
 
     public RedisSet(){
         this.type = RedisType.SET.VAL();

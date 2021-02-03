@@ -1,5 +1,6 @@
 package cn.buptleida;
 
+import cn.buptleida.conf.CommandMapFactory;
 import cn.buptleida.database.RedisServer;
 import cn.buptleida.netty.Server;
 import cn.buptleida.nio.IOService;
@@ -9,9 +10,10 @@ import java.io.IOException;
 
 public class SvrFrame {
     public static void main(String[] args) throws Exception {
+        CommandMapFactory.setCmdTablePath("C:\\_study\\repo\\daredis\\src\\main\\resources\\innerConf\\cmdTable.txt");
         //初始化数据结构
-        RedisServer.init();
-        RedisServer.initDB(0);
+        RedisServer.INSTANCE.init();
+        RedisServer.INSTANCE.initDB(0);
         //AOF启动
         aofInit();
         //初始化IO模块

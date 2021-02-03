@@ -1,5 +1,7 @@
 package cn.buptleida.dataCoreObj;
 
+import cn.buptleida.conf.Command;
+import cn.buptleida.dataCoreObj.base.CmdExecutor;
 import cn.buptleida.dataCoreObj.base.RedisObject;
 import cn.buptleida.dataCoreObj.enumerate.RedisEnc;
 import cn.buptleida.dataCoreObj.enumerate.RedisType;
@@ -8,16 +10,22 @@ import cn.buptleida.dataCoreObj.underObj.Dict;
 import cn.buptleida.dataCoreObj.underObj.SDS;
 import cn.buptleida.dataCoreObj.underObj.ZipList;
 import cn.buptleida.dataCoreObj.underObj.zlentry;
+import cn.buptleida.database.RedisClient;
+import cn.buptleida.util.ConvertUtil;
+import cn.buptleida.util.MathUtil;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 
 
-public class RedisHash extends RedisObject {
+public class RedisHash extends RedisObject implements CmdExecutor {
     public RedisHash(){
         this.type = RedisType.HASH.VAL();
         this.encoding = RedisEnc.ZIPLIST.VAL();
         this.ptr = new ZipList();
     }
+
 
     /**
      * 插入键值对
@@ -25,32 +33,35 @@ public class RedisHash extends RedisObject {
      * @param val 可能是字符串，可能是整型数字
      */
     public void hSet(String key, String val){
-        if(encoding == RedisEnc.ZIPLIST.VAL()){
-            ZipList zipList = (ZipList) ptr;
-            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_16BE);
-            byte[] valBytes = val.getBytes(StandardCharsets.UTF_16BE);
+        if(MathUtil.isNumeric(val)) hSet(key,Long.parseLong(val));
+        else{
+            if(encoding == RedisEnc.ZIPLIST.VAL()){
+                ZipList zipList = (ZipList) ptr;
+                byte[] keyBytes = key.getBytes(StandardCharsets.UTF_16BE);
+                byte[] valBytes = val.getBytes(StandardCharsets.UTF_16BE);
 
-            zlentry entry;
-            int update=0;
-            //如果key已存在，则更新对应的val
-            if((entry = zipList.exist(keyBytes,1))!=null){
-                int valPos = entry.endPos();
-                zipList.delete(valPos);
-                zipList.insertAfter(entry, valBytes);
-                update = 1;
-            }
-            //没有执行更新操作，则进行push
-            if(update == 0){
-                zipList.push(keyBytes,1);
-                zipList.push(valBytes,1);
-            }
+                zlentry entry;
+                int update=0;
+                //如果key已存在，则更新对应的val
+                if((entry = zipList.exist(keyBytes,1))!=null){
+                    int valPos = entry.endPos();
+                    zipList.delete(valPos);
+                    zipList.insertAfter(entry, valBytes);
+                    update = 1;
+                }
+                //没有执行更新操作，则进行push
+                if(update == 0){
+                    zipList.push(keyBytes,1);
+                    zipList.push(valBytes,1);
+                }
 
-            checkVary(Math.max(keyBytes.length, valBytes.length));
-        }else{
-            Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
-            SDS keySDS = new SDS(key.toCharArray());
-            SDS valSDS = new SDS(val.toCharArray());
-            dict.put(keySDS, valSDS);
+                checkVary(Math.max(keyBytes.length, valBytes.length));
+            }else{
+                Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
+                SDS keySDS = new SDS(key.toCharArray());
+                SDS valSDS = new SDS(val.toCharArray());
+                dict.put(keySDS, valSDS);
+            }
         }
     }
 
