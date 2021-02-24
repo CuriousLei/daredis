@@ -28,6 +28,7 @@ public class ClientHandler extends Connector implements RedisClient.RedisClientC
 
     @Override
     public void RedisMsgCallBack(Object msg) {
+        // redis执行完毕回调，执行输出注册
         write(msg);
     }
 
@@ -38,8 +39,6 @@ public class ClientHandler extends Connector implements RedisClient.RedisClientC
 
         void NewMsgCallBack(ClientHandler clientHandler, String msg);
 
-        //用户传来新消息的回调,NIO模式
-        //void NewMsgCallBack(ClientHandler clientHandler, ioArgs args);
     }
 
     /**
@@ -48,24 +47,14 @@ public class ClientHandler extends Connector implements RedisClient.RedisClientC
     @Override
     protected void onReceiveFromCore(String msg) {
         super.onReceiveFromCore(msg);
-        //System.out.println("收到：" + msg);
-
-
         try {
             if (msg.equalsIgnoreCase("exit")) {
                 close();
             }
-            // String returnMsg = RedisServer.INSTANCE.commandExecute(client, msg);
-            //write(returnMsg);
             RedisServer.INSTANCE.commandExecute(client, msg);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //clientHandlerCallBack.NewMsgCallBack(ClientHandler.this, msg);
-
-        //回调完再次注册，读取下一条数据
-        //必须要这样
-        //ioContext.getIoSelector().registerInput(socketChannel, ClientHandler.this);
     }
 
     /**

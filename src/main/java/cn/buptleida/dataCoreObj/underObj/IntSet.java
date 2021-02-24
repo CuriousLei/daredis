@@ -231,35 +231,5 @@ public class IntSet implements RedisObj {
         return contents;
     }
 
-    public static void main(String[] args) {
-        IntSet intSet = new IntSet();
-
-        intSet.add(8);
-        intSet.add(5);
-        System.out.println(Arrays.toString(intSet.getContents()));
-        System.out.println(intSet.getInsertIndex(10));
-        intSet.add(10);
-        System.out.println(Arrays.toString(intSet.getContents()));
-        intSet.add(9);
-        System.out.println(Arrays.toString(intSet.getContents()));
-        intSet.add(65536);
-        // System.out.println(intSet.contents[2].getClass());
-        // System.out.println(intSet.containsVal(10));
-        // System.out.println(intSet.containsVal(11));
-        // System.out.println(intSet.getIndex(11));
-        // System.out.println(intSet.getInsertIndex(11));
-        //
-        // System.out.println(intSet.getIndex(8));
-        // System.out.println(intSet.getInsertIndex(8));
-        // System.out.println(intSet.contents[0]);
-        System.out.println(Arrays.toString(intSet.getContents()));
-        intSet.remove(9);
-        System.out.println(Arrays.toString(intSet.getContents()));
-        intSet.remove(5);
-        System.out.println(Arrays.toString(intSet.getContents()));
-        intSet.remove(65536);
-        System.out.println(Arrays.toString(intSet.getContents()));
-
-    }
 }
 

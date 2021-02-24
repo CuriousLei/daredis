@@ -23,22 +23,23 @@ public class IOClient extends Connector {
     IOClient(SocketChannel socketChannel) throws IOException{
         setup(socketChannel);
     }
+    public String sendMsg(String msg) {
+        this.send(msg);
+        for(;;){
+            if(onRecieve.get()) break;
+        }
+        onRecieve.set(false);
+        // return res;
+        return res;
+    }
 
     @Override
     protected void onReceiveFromCore(String msg) {
         super.onReceiveFromCore(msg);
         //输出收到的消息
-        //System.out.println("接收到："+msg);
+        System.out.println("接收到："+msg);
         res = msg;
-        synchronized (lock){
-            lock.notify();
-        }
-
-        // latch.countDown();
-        //System.out.println(res);
-        //onRecieve.set(true);
-        // onRecieve.notify();
-        // onRecieve.set(false);
+        onRecieve.set(true);
     }
 
     @Override
@@ -73,22 +74,7 @@ public class IOClient extends Connector {
         return new IOClient(socketChannel);
     }
 
-    public String sendMsg(String msg) {
-        this.send(msg);
-        synchronized (lock){
-            try {
-                lock.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        // for(;;){
-        //     if(onRecieve.get()) break;
-        // }
-        // onRecieve.set(false);
-        // return res;
-        return res;
-    }
+
 
     public static String sendMsgWithIpPort(String serverIp, int serverPort, String msg) throws IOException{
         IOClient connector = IOClient.startWith(serverIp,serverPort);

@@ -2,18 +2,23 @@ package cn.buptleida.persistence;
 
 import cn.buptleida.database.RedisClient;
 import cn.buptleida.database.RedisServer;
+import cn.buptleida.util.IoThreadFactory;
 
 import java.io.*;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AOF {
-    private static String AOF_FILE_PATH;
+    static String AOF_FILE_PATH;
     private static String CMD_PATH;
     private static final Exception EXCEPTION = new Exception("AOF格式错误！");
     private static final AtomicBoolean isClosed = new AtomicBoolean(false);
+    public static ExecutorService AOFOutputPool;
 
     public static void recovery() throws Exception {
         File aofFile = new File(AOF_FILE_PATH);
@@ -40,47 +45,7 @@ public class AOF {
     }
 
     public static void startup() {
-        HashSet<String> commandsSet = new HashSet<>();
-        try {
-            BufferedReader reader;
-            if(CMD_PATH.charAt(1)==':'){
-                reader = new BufferedReader(new FileReader(new File(CMD_PATH)));
-            }else{
-                InputStream is = AOF.class.getResourceAsStream(CMD_PATH);
-                reader = new BufferedReader(new InputStreamReader(is));
-            }
-            String cmd = null;
-            while((cmd=reader.readLine())!=null){
-                commandsSet.add(cmd);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Thread aofWriteThread = new Thread("AOF Write Thread") {
-            @Override
-            public void run() {
-                while (!isClosed.get()) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        BufferedWriter writer = new BufferedWriter(new FileWriter(new File(AOF_FILE_PATH), true));
-                        String[] command = null;
-                        while ((command = RedisServer.INSTANCE.commandsQueue.poll()) != null) {
-                            if(!commandsSet.contains(command[0])) continue;// 非修改性命令，不需要写入
-                            writer.write(catToAOFCommand(command));
-                        }
-                        writer.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        isClosed.set(true);
-                    }
-                }
-            }
-        };
-        aofWriteThread.start();
+        AOFOutputPool = Executors.newSingleThreadExecutor(new IoThreadFactory("AOF-output-threadPool"));
     }
 
     /**
@@ -88,7 +53,7 @@ public class AOF {
      * @param command
      * @return
      */
-    private static String catToAOFCommand(String[] command) {
+    static String catToAOFCommand(String[] command) {
         StringBuilder stb = new StringBuilder("*");
         stb.append(command.length);
         stb.append("\r\n");
@@ -107,8 +72,9 @@ public class AOF {
         AOF_FILE_PATH = aofFilePath;
     }
 
-
     public static void setCmdPath(String cmdPath) {
         CMD_PATH = cmdPath;
     }
+
+
 }

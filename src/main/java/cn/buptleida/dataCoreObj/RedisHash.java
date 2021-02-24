@@ -217,49 +217,4 @@ public class RedisHash extends RedisObject implements CmdExecutor {
         encoding = RedisEnc.HT.VAL();
         ptr = dict;
     }
-
-    public static void main(String[] args) {
-        pressure(addData());
-    }
-
-    public static RedisHash addData(){
-        RedisHash hash = new RedisHash();
-        for(int i=0;i<1000;++i){
-            hash.hSet("key"+i,i);
-        }
-        return hash;
-    }
-
-    public static void pressure(RedisHash hash){
-        double start = System.currentTimeMillis();
-        for(int i=0;i<1000;++i){
-            hash.hGet("key"+i);
-        }
-        double end = System.currentTimeMillis();
-        System.out.println(end-start);
-    }
-    private static void printAllItem(RedisHash hash) {
-        if (hash.encoding == RedisEnc.ZIPLIST.VAL()) {
-            ZipList zipList = (ZipList) hash.ptr;
-            ZipList.print(zipList);
-        } else {
-            Dict<SDS,SDS> dict = (Dict<SDS,SDS>) hash.ptr;
-            Dict.printDictInfo(dict);
-        }
-    }
-    private static void testDict(RedisHash hash){
-        for(int i=0;i<512;++i){
-            hash.hSet(Integer.toString(i),"leida"+i);
-        }
-        System.out.println(hash.hGet("56"));
-        System.out.println(hash.hGet("86"));
-        hash.hDel("86");
-        hash.hDel("100");
-        System.out.println(hash.hGet("86"));
-        System.out.println(hash.hLen());
-        hash.hSet("56","qiqiqiqiqi");
-        System.out.println(hash.hGet("56"));
-        System.out.println(hash.hExists("56"));
-        //printAllItem(hash);
-    }
 }

@@ -105,15 +105,4 @@ public class RedisString extends RedisObject  implements CmdExecutor {
         SDS item = (SDS) ptr;
         return item.len();
     }
-
-    public static void main(String[] args) {
-        RedisString redisString = new RedisString("wewewe");
-        System.out.println(redisString.get());
-        redisString.incrby();
-        System.out.println(redisString.get());
-        redisString.decrby();
-        redisString.append("opopo");
-        System.out.println(redisString.get());
-        System.out.println(redisString.strlen());
-    }
 }

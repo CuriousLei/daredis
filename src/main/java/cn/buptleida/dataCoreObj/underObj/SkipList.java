@@ -24,29 +24,6 @@ public class SkipList<T extends Comparable<? super T>>  implements RedisObj {
         this.maxLevelHeight = 0;
     }
 
-    // public boolean insert(double score, T obj) {
-    //
-    //     int levelHeight = getRandomHeight();
-    //     SkipListNode<T> node = new SkipListNode<>(obj, levelHeight);
-    //     node.setBackword(tail);
-    //
-    //     SkipListNode<T> backNode = tail;
-    //     int span =0;
-    //     for (int i = 0; i < levelHeight; ++i) {
-    //         if (i < backNode.getLevel().length) {
-    //             backNode.getLevel()[i].setForward(node);
-    //             backNode.getLevel()[i].setSpan(span);
-    //         } else {
-    //             backNode = backNode.getBackword();
-    //             ++span;
-    //             --i;
-    //         }
-    //     }
-    //     //设置分值
-    //     node.setScore(span+backNode.getScore());
-    //     return true;
-    // }
-
     /**
      * 插入新节点
      *
@@ -245,71 +222,4 @@ public class SkipList<T extends Comparable<? super T>>  implements RedisObj {
         return maxLevelHeight;
     }
 
-    /**
-     * 测试
-     * @param args
-     */
-    public static void main(String[] args) {
-
-        SkipList<Integer> skipList = new SkipList<>();
-        skipList.zslInsert(1.2, 32);
-        skipList.zslInsert(1.6, 30);
-        skipList.zslInsert(1.4, 36);
-        skipList.zslInsert(1.4, 30);
-        // skipList.zslInsert(2.6, 32);
-        // skipList.zslInsert(2.6, 30);
-        // skipList.zslInsert(2.6, 36);
-        // skipList.zslInsert(2.6, 30);
-         skipList.zslInsert(2.6, 56);
-        skipList.zslInsert(3.6, 119);
-        printSkipList(skipList);
-
-        //SkipListNode<Integer> temp = skipList.searchByScore(2.6, skipList.header, skipList.maxLevelHeight - 1);
-        // SkipListNode<Integer> tempFirst = skipList.zslFirstInRange(1.2, 2.7, skipList.header,
-        //         skipList.maxLevelHeight - 1);
-        // SkipListNode<Integer> tempLast = skipList.zslLastInRange(1.36, 1.6, skipList.header,
-        //         skipList.maxLevelHeight - 1);
-        // printNode(tempFirst);
-        // printNode(tempLast);
-
-        skipList.zslDelete(2.6,56);
-        printSkipList(skipList);
-
-    }
-
-
-    /**
-     * 输出整个跳表
-     */
-    public static void printSkipList(SkipList<?> skipList) {
-        System.out.println("length:" + skipList.length);
-        System.out.println("maxLevel:" + skipList.maxLevelHeight);
-        SkipListNode<?> temp = skipList.header;
-        while (temp != null) {
-            System.out.println();
-            System.out.print(" score:" + temp.getScore());
-            System.out.print(" data:" + temp.getObj());
-            System.out.print(" LEVELS: ");
-            for (int i = 0; i < temp.getLevel().length && i < skipList.maxLevelHeight; i++) {
-                System.out.print(" level" + i + ":" + temp.getLevel()[i].getSpan());
-            }
-
-            temp = temp.getLevel()[0].getForward();
-        }
-        System.out.println();
-    }
-
-    /**
-     * 输出节点信息
-     * @param node
-     */
-    private static void printNode(SkipListNode<Integer> node) {
-        System.out.println();
-        System.out.print(" score:" + node.getScore());
-        System.out.print(" data:" + node.getObj());
-        System.out.print(" LEVELS: ");
-        for (int i = 0; i < node.getLevel().length; i++) {
-            System.out.print(" level" + i + ":" + node.getLevel()[i].getSpan());
-        }
-    }
 }

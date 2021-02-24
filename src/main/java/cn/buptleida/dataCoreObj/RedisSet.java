@@ -177,47 +177,4 @@ public class RedisSet extends RedisObject implements CmdExecutor {
             return Status.ERROR;
         return Status.SUCCESS;
     }
-
-    public static void main(String[] args) {
-        RedisSet set = new RedisSet();
-
-        testDict(set);
-        // set.sAdd(486);
-        // set.sAdd(321);
-        // set.sAdd(98765);
-        // System.out.println(set.sCard());
-        // System.out.println(set.sIsMember(321));
-        // System.out.println(set.sIsMember(32));
-        // System.out.println(set.sRandMember());
-        // printAllItem(set);
-        // set.sRem(321);
-        // System.out.println(set.sPop());
-        // printAllItem(set);
-    }
-    private static void printAllItem(RedisSet set) {
-        if (set.encoding == RedisEnc.INTSET.VAL()) {
-            IntSet intSet = (IntSet) set.ptr;
-            System.out.println(Arrays.toString(intSet.getContents()));
-        } else {
-            Dict<SDS,SDS> dict = (Dict<SDS,SDS>) set.ptr;
-            Dict.printDictInfo(dict);
-        }
-    }
-    private static void testDict(RedisSet set){
-        for(int i=0;i<513;++i){
-            set.sAdd(1024+i);
-        }
-        printAllItem(set);
-        System.out.println(set.sCard());
-        set.sAdd("leidaniubi");
-        printAllItem(set);
-        System.out.println(set.sCard());
-        System.out.println(set.sPop());
-        System.out.println(set.sIsMember("leidaniubi"));
-        set.sRem("leidaniubi");
-        System.out.println(set.sIsMember("leidaniubi"));
-        System.out.println(set.sIsMember(1424));
-        set.sRem(1424);
-        System.out.println(set.sIsMember(1424));
-    }
 }

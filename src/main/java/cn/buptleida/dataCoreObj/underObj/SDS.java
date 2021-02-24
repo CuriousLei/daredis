@@ -149,20 +149,4 @@ public class SDS implements RedisObj, Comparable<SDS> {
         }
         return len1 - len2;
     }
-
-    public static void main(String[] args) {
-
-        SDS sds = new SDS(new char[]{'q', 'w', 'e'}, 2);
-        sds.append(new char[]{'q', 'w', 'e'}, 0, 3);
-        System.out.println(Arrays.toString(sds.buf));
-        System.out.println(sds.len + " " + sds.free);
-        sds.copyFrom(new char[]{'1', '2', '3', '4', '1', '2', '3', '4', '1', '2', '3', '4'}, 0, 12);
-        System.out.println(Arrays.toString(sds.buf));
-
-        SDS str1 = new SDS(new char[]{'1', '2', '3', '4', '1', '2', '3', '4', '1', '2', '3', '4'}, 12);
-        SDS str2 = new SDS(new char[]{'1', '2', '3', '4', '1', '2', '3', '4', '1', '2', '3'}, 11);
-        SDS str3 = new SDS(new char[]{'1', '2', '3', '4', '1', '2', '3', '4', '1', '2', '3', '0'}, 12);
-        System.out.println(sds.equals(str1) + " " + sds.equals(str2) + " " + sds.equals(str3));
-
-    }
 }

@@ -136,17 +136,14 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
                             ServerSocketChannel serverChannel = (ServerSocketChannel)key.channel();
                             //通过accept获取socketChannel，对应于一个客户端
                             SocketChannel socketChannel = serverChannel.accept();
-
                             // socketChannel.socket().setReceiveBufferSize(32*1024);
                             // socketChannel.socket().setSendBufferSize(32*1024);
-
                             String uuid = UUID.randomUUID().toString();//为客户端生成唯一标识
                             System.out.println("已接受连接client:" + uuid
                                     + " /Addr:" + socketChannel.getRemoteAddress()
                                     + " /Port:" + socketChannel.socket().getPort());
                             //创建对象，用于处理客户端消息
                             ClientHandler clientHandler = new ClientHandler(socketChannel, IOService.this, uuid);
-
                             //这里只有一个线程，貌似加锁没必要
                             // synchronized (SvrFrame.this){
                             //     clientHandlerList.add(clientHandle);
@@ -168,18 +165,5 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
             done = true;
             CloseUtil.close(selector);
         }
-    }
-
-    public void test() {
-        // Class strCLass = Class.forName("String");
-        // File file = new File("/innerConf/modifyingCmd");
-        File file = new File("/innerConf/cmdTable.txt");
-    }
-    public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        System.out.println("测试以下");
-        IOService service = new IOService("127.0.0.1",8008);
-        service.test();
-        Method method = service.getClass().getMethod("test",null);
-        method.invoke(service,null);
     }
 }

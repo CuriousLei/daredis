@@ -18,6 +18,7 @@ public enum RedisServer {
     public RedisDB[] db;
     public ConcurrentLinkedDeque<String[]> commandsQueue;
     public HashMap<String, Command> commandsMap;
+    public boolean AofOpen = false;
 
     public void init() throws IOException {
         db = new RedisDB[dbNum];
@@ -85,8 +86,6 @@ public enum RedisServer {
         pih.setTarget(executor);//注入目标对象
         CmdExecutor proxy = (CmdExecutor) pih.getProxy();//得到代理对象
         proxy.proc(params, cmd, method, client);//执行命令
-
-        if((cmd.getFlag()&2)==2) commandsQueue.offer(params);
     }
 
     private String toStr(Object obj) {

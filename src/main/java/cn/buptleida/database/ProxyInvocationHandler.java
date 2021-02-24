@@ -2,6 +2,8 @@ package cn.buptleida.database;
 
 import cn.buptleida.conf.Command;
 import cn.buptleida.conf.Toast;
+import cn.buptleida.persistence.AOF;
+import cn.buptleida.persistence.AofHandler;
 import cn.buptleida.util.ConvertUtil;
 
 import java.lang.reflect.InvocationHandler;
@@ -16,8 +18,8 @@ public class ProxyInvocationHandler implements InvocationHandler {
         this.target = target;
     }
 
-    public Object getProxy(){
-        return Proxy.newProxyInstance(this.getClass().getClassLoader(),target.getClass().getInterfaces(),this);
+    public Object getProxy() {
+        return Proxy.newProxyInstance(this.getClass().getClassLoader(), target.getClass().getInterfaces(), this);
     }
 
     @Override
@@ -28,31 +30,39 @@ public class ProxyInvocationHandler implements InvocationHandler {
         Method concreteMethod = (Method) args[2];
         RedisClient client = (RedisClient) args[3];
 
-        if(concreteMethod==null||cmd.getParamNum()!=params.length){
+        if (concreteMethod == null || cmd.getParamNum() != params.length) {
             client.msgReturn(Toast.PARAM_ERROR);
             return null;
         }
 
-
-        Object[] concreteParams = null;
-        if(cmd.getParamClasses()!=null){
-            int len = cmd.getParamClasses().length;
-            concreteParams = new Object[len];
-            for(int i=0;i<len;++i){
-                concreteParams[i] = ConvertUtil.convertFromStr(params[cmd.getParamNum()-len+i],cmd.getParamClasses()[i]);
-            }
-        }
+        Object[] concreteParams = generateParam(params, cmd);
 
         try {
             // Object msg = method.invoke(target,args);
             Object msg = concreteMethod.invoke(target, concreteParams);
-            if(msg==null) client.msgReturn(Toast.SUCCESS);
+            if (msg == null) client.msgReturn(Toast.SUCCESS);
             else client.msgReturn(msg);
+            //添加到AOF文件
+            if (!client.isFake() && (cmd.getFlag() & 2) == 2)
+                AOF.AOFOutputPool.execute(new AofHandler(params));
+                //RedisServer.INSTANCE.commandsQueue.offer(params);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             client.msgReturn(Toast.FAILURE);
         }
 
         return null;
+    }
+
+    private Object[] generateParam(String[] params, Command cmd) {
+        Object[] concreteParams = null;
+        if (cmd.getParamClasses() != null) {
+            int len = cmd.getParamClasses().length;
+            concreteParams = new Object[len];
+            for (int i = 0; i < len; ++i) {
+                concreteParams[i] = ConvertUtil.convertFromStr(params[cmd.getParamNum() - len + i], cmd.getParamClasses()[i]);
+            }
+        }
+        return concreteParams;
     }
 
 }

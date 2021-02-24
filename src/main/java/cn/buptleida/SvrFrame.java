@@ -64,5 +64,6 @@ public class SvrFrame {
             System.out.println("AOF RECOVERY SUCCESS !");
         }
         AOF.startup();
+        RedisServer.INSTANCE.AofOpen = true;
     }
 }

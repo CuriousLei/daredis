@@ -165,29 +165,4 @@ public class List<T extends Comparable<? super T>> implements RedisObj {
             return current != null ? current.value: null;
         }
     }
-
-    public static void main(String[] args) {
-        List<Integer> list = new List<>();
-        list.addNodeTail(1);
-        list.addNodeTail(1);
-        list.addNodeTail(2);
-        list.addNodeTail(5);
-        list.addNodeTail(4);
-        print(list);
-        list.addNodeHead(100);
-        print(list);
-        list.insertNode(list.searchKey(5),98,0);
-        list.insertNode(list.searchKey(1),94,1);
-        print(list);
-        list.insertNode(list.searchKey(100),93,0);
-        print(list);
-    }
-    private static void print(List<Integer> list){
-        Iterator<Integer> it = list.iterator(AL_START_HEAD);
-        while (it.hasNext()){
-            int k = it.next();
-            System.out.print(" "+k);
-        }
-        System.out.println();
-    }
 }

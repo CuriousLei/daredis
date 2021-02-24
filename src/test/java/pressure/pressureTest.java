@@ -18,7 +18,7 @@ public class pressureTest {
         int ServerPort = 8008;
 
         List<IOClient> ClientList = new ArrayList<>();
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 0; i < 100; ++i) {
             System.out.println(i);
             try {
                 IOClient client = IOClient.startWith(ServerIp,ServerPort);
@@ -44,11 +44,12 @@ public class pressureTest {
 
         Runnable runnable = () -> {
             while (!done) {
+                System.out.println("开始");
                 int i=0;
                 long now = System.currentTimeMillis();
                 for (IOClient client : ClientList) {
                     //client.send("SET "+"name"+i+" "+i*i);
-                    client.sendMsg("GET age");
+                    client.sendMsg("GET name"+i);
                     i++;
                 }
                 // try {
@@ -57,7 +58,8 @@ public class pressureTest {
                 //     e.printStackTrace();
                 // }
                 long end = System.currentTimeMillis();
-                System.out.println(end-now);
+                // System.out.println(end-now);
+                systemRead();
             }
         };
         Thread thread = new Thread(runnable);

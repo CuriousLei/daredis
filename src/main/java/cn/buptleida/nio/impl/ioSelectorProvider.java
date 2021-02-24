@@ -3,6 +3,7 @@ package cn.buptleida.nio.impl;
 import cn.buptleida.nio.core.ioContext;
 import cn.buptleida.nio.core.ioProvider;
 import cn.buptleida.util.CloseUtil;
+import cn.buptleida.util.IoThreadFactory;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class ioSelectorProvider implements ioProvider {
     private final Selector readSelector;
@@ -53,8 +55,8 @@ public class ioSelectorProvider implements ioProvider {
         //         new IoProviderThreadFactory("IoProvider-Input-Thread-Pool"));
         // outputHandlePool = Executors.newFixedThreadPool(4,
         //         new IoProviderThreadFactory("IoProvider-Output-Thread-Pool"));
-        inputHandlePool = Executors.newSingleThreadExecutor(new IoProviderThreadFactory("IoProvider-Input-Thread-Pool"));
-        outputHandlePool = Executors.newSingleThreadExecutor(new IoProviderThreadFactory("IoProvider-Output-Thread-Pool"));
+        inputHandlePool = Executors.newSingleThreadExecutor(new IoThreadFactory("IoProvider-Input-Thread-Pool"));
+        outputHandlePool = Executors.newSingleThreadExecutor(new IoThreadFactory("IoProvider-Output-Thread-Pool"));
         // testHandlePool = Executors.newSingleThreadExecutor(new IoProviderThreadFactory("test-Thread-Pool"));
 
         //建立两个线程，执行输入和输出的select
@@ -66,20 +68,6 @@ public class ioSelectorProvider implements ioProvider {
     private void startRead() {
         Thread thread = new Thread("IoSelectorProvider ReadSelector Thread") {
             //private Boolean done = false;
-            private void readExecute(){
-                Iterator<SelectionKey> iterator = readSelector.selectedKeys().iterator();
-                while (iterator.hasNext()) {
-                    SelectionKey key = iterator.next();
-                    iterator.remove();//此处格外重要
-                    if (key.isValid()) {
-                        // 取消继续对keyOps的监听
-                        key.interestOps(key.readyOps() & ~SelectionKey.OP_READ);
-
-                        //线程池执行read操作
-                        inputHandlePool.execute(handlerMap.get(key));
-                    }
-                }
-            }
             @Override
             public void run() {
                 super.run();
@@ -90,14 +78,26 @@ public class ioSelectorProvider implements ioProvider {
                             //这里有一个等待操作，等待注册结束
                             waitSelection(inRegInput);
                             continue;
-                        } else if(inRegInput.get()){
-                             waitSelection(inRegInput);
+                        } else if (inRegInput.get()) {
+                            waitSelection(inRegInput);
                         }
                         readExecute();
                     }
-
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+            }
+            private void readExecute() {
+                Iterator<SelectionKey> iterator = readSelector.selectedKeys().iterator();
+                while (iterator.hasNext()) {
+                    SelectionKey key = iterator.next();
+                    iterator.remove();//此处格外重要
+                    if (key.isValid()) {
+                        // 取消继续对keyOps的监听
+                        key.interestOps(key.readyOps() & ~SelectionKey.OP_READ);
+                        //线程池执行read操作
+                        inputHandlePool.execute(handlerMap.get(key));
+                    }
                 }
             }
         };
@@ -107,18 +107,6 @@ public class ioSelectorProvider implements ioProvider {
 
     private void startWrite() {
         Thread thread = new Thread("IoSelectorProvider WriteSelector Thread") {
-            private void writeExecute(){
-                //System.out.println(n+"个write就绪");
-                Set<SelectionKey> selectionKeys = writeSelector.selectedKeys();
-                //System.out.println(selectionKeys.size()+"个通道就绪...");
-                for (SelectionKey selectionKey : selectionKeys) {
-                    if (selectionKey.isValid()) {
-                        selectionKey.interestOps(selectionKey.readyOps() & ~SelectionKey.OP_WRITE);
-                        outputHandlePool.execute(handlerMap.get(selectionKey));
-                    }
-                }
-                selectionKeys.clear();
-            }
             @Override
             public void run() {
                 while (!isClosed.get()) {
@@ -127,18 +115,43 @@ public class ioSelectorProvider implements ioProvider {
                         if (writeSelector.select() == 0) {
                             waitSelection(inRegOutput);
                             continue;
-                        } else if(inRegOutput.get()){
-                             waitSelection(inRegOutput);
-                         }
+                        } else if (inRegOutput.get()) {
+                            waitSelection(inRegOutput);
+                        }
                         writeExecute();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
+
+            private void writeExecute() {
+                Set<SelectionKey> selectionKeys = writeSelector.selectedKeys();
+                for (SelectionKey selectionKey : selectionKeys) {
+                    if (selectionKey.isValid()) {
+                        selectionKey.interestOps(selectionKey.readyOps() & ~SelectionKey.OP_WRITE);
+                        outputHandlePool.execute(handlerMap.get(selectionKey));
+                    }
+                }
+                selectionKeys.clear();
+            }
         };
         thread.setPriority(Thread.MAX_PRIORITY);
         thread.start();
+    }
+
+    private static void waitSelection(final AtomicBoolean locker) {
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
+        synchronized (locker) {
+            if (locker.get()) {
+                try {
+                    //暂停当前线程，直到被唤醒
+                    locker.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public void close() {
@@ -146,9 +159,7 @@ public class ioSelectorProvider implements ioProvider {
         if (isClosed.compareAndSet(false, true)) {
             inputHandlePool.shutdown();
             outputHandlePool.shutdown();
-
             handlerMap.clear();
-
             readSelector.wakeup();
             writeSelector.wakeup();
             CloseUtil.close(readSelector, writeSelector);
@@ -177,46 +188,29 @@ public class ioSelectorProvider implements ioProvider {
         unRegister(channel, writeSelector, handlerMap);
     }
 
-    private static void waitSelection(final AtomicBoolean locker) {
-        // System.out.println("进入wait");
-        //noinspection SynchronizationOnLocalVariableOrMethodParameter
-        synchronized (locker) {
-            if (locker.get()) {
-                try {
-                    // System.out.println("进入等待队列");
-                    //暂停当前线程，直到被唤醒
-                    locker.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
     private static SelectionKey registerRead(SocketChannel channel, Selector selector, AtomicBoolean locker,
-                                         Runnable ioCallback, HashMap<SelectionKey, Runnable> map,
-                                         int ops) {
+                                             Runnable ioCallback, HashMap<SelectionKey, Runnable> map,
+                                             int ops) {
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (locker) {
             locker.set(true);
             try {
                 //这时候select会立即返回，若是0，则进入waitSelection，然后进行locker.wait
-                // selector.wakeup();
-                test0Read(selector);
-
+                selector.wakeup();
+                // test0Read(selector);
                 SelectionKey key = null;
                 if (channel.isRegistered()) {
-                    // key = channel.keyFor(selector);
-                    key = test1Read(channel,selector);
+                    key = channel.keyFor(selector);
+                    // key = test1Read(channel, selector);
                     if (key != null) {
-                        // key.interestOps(key.readyOps() | ops);
-                        key=test2Read(key,ops);
+                        key.interestOps(key.readyOps() | ops);
+                        // key = test2Read(key, ops);
                     }
                 }
                 //（注册write）如果已注册过read，还没注册write，此时key为null
                 if (key == null) {
-                    // key = channel.register(selector, ops);
-                    key = test3Read(channel, selector, ops);
+                    key = channel.register(selector, ops);
+                    // key = test3Read(channel, selector, ops);
                     map.put(key, ioCallback);
                 }
                 return key;
@@ -231,30 +225,30 @@ public class ioSelectorProvider implements ioProvider {
             }
         }
     }
+
     private static SelectionKey registerWrite(SocketChannel channel, Selector selector, AtomicBoolean locker,
-                                         Runnable ioCallback, HashMap<SelectionKey, Runnable> map,
-                                         int ops) {
+                                              Runnable ioCallback, HashMap<SelectionKey, Runnable> map,
+                                              int ops) {
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (locker) {
             locker.set(true);
             try {
                 //这时候select会立即返回，若是0，则进入waitSelection，然后进行locker.wait
-                // selector.wakeup();
-                test0Write(selector);
-
+                selector.wakeup();
+                // test0Write(selector);
                 SelectionKey key = null;
                 if (channel.isRegistered()) {
-                    // key = channel.keyFor(selector);
-                    key = test1Write(channel,selector);
+                    key = channel.keyFor(selector);
+                    // key = test1Write(channel, selector);
                     if (key != null) {
-                        // key.interestOps(key.readyOps() | ops);
-                        key=test2Write(key,ops);
+                        key.interestOps(key.readyOps() | ops);
+                        // key = test2Write(key, ops);
                     }
                 }
                 //（注册write）如果已注册过read，还没注册write，此时key为null
                 if (key == null) {
-                    // key = channel.register(selector, ops);
-                    key = test3Write(channel, selector, ops);
+                    key = channel.register(selector, ops);
+                    // key = test3Write(channel, selector, ops);
                     map.put(key, ioCallback);
                 }
                 return key;
@@ -269,35 +263,42 @@ public class ioSelectorProvider implements ioProvider {
             }
         }
     }
-    private static void test0Read(Selector selector){
-        // ioSelectorProvider provider = ioContext.getIoSelector();
-        // provider.testHandlePool.execute(provider.readRegisterWake);
-        selector.wakeup();
-    }
-    private static SelectionKey test1Read(SocketChannel channel,Selector selector){
-        return channel.keyFor(selector);
-    }
-    private static SelectionKey test2Read(SelectionKey key,int ops){
-        return key.interestOps(key.readyOps() | ops);
-    }
-    private static SelectionKey test3Read(SocketChannel channel,Selector selector,int ops) throws ClosedChannelException {
-        return channel.register(selector, ops);
-    }
 
-    private static void test0Write(Selector selector){
-        // ioSelectorProvider provider = ioContext.getIoSelector();
-        // provider.testHandlePool.execute(provider.writeRegisterWake);
-        selector.wakeup();
-    }
-    private static SelectionKey test1Write(SocketChannel channel,Selector selector){
-        return channel.keyFor(selector);
-    }
-    private static SelectionKey test2Write(SelectionKey key,int ops){
-        return key.interestOps(key.readyOps() | ops);
-    }
-    private static SelectionKey test3Write(SocketChannel channel,Selector selector,int ops) throws ClosedChannelException {
-        return channel.register(selector, ops);
-    }
+    // private static void test0Read(Selector selector) {
+    //     // ioSelectorProvider provider = ioContext.getIoSelector();
+    //     // provider.testHandlePool.execute(provider.readRegisterWake);
+    //     selector.wakeup();
+    // }
+    //
+    // private static SelectionKey test1Read(SocketChannel channel, Selector selector) {
+    //     return channel.keyFor(selector);
+    // }
+    //
+    // private static SelectionKey test2Read(SelectionKey key, int ops) {
+    //     return key.interestOps(key.readyOps() | ops);
+    // }
+    //
+    // private static SelectionKey test3Read(SocketChannel channel, Selector selector, int ops) throws ClosedChannelException {
+    //     return channel.register(selector, ops);
+    // }
+    //
+    // private static void test0Write(Selector selector) {
+    //     // ioSelectorProvider provider = ioContext.getIoSelector();
+    //     // provider.testHandlePool.execute(provider.writeRegisterWake);
+    //     selector.wakeup();
+    // }
+    //
+    // private static SelectionKey test1Write(SocketChannel channel, Selector selector) {
+    //     return channel.keyFor(selector);
+    // }
+    //
+    // private static SelectionKey test2Write(SelectionKey key, int ops) {
+    //     return key.interestOps(key.readyOps() | ops);
+    // }
+    //
+    // private static SelectionKey test3Write(SocketChannel channel, Selector selector, int ops) throws ClosedChannelException {
+    //     return channel.register(selector, ops);
+    // }
 
     // private static SelectionKey registerTest(SocketChannel channel, Selector selector, AtomicBoolean locker,
     //                                  Runnable ioCallback, HashMap<SelectionKey, Runnable> map,
@@ -308,36 +309,11 @@ public class ioSelectorProvider implements ioProvider {
     private static void unRegister(SocketChannel channel, Selector selector, HashMap<SelectionKey, Runnable> map) {
         if (channel.isRegistered()) {
             SelectionKey key = channel.keyFor(selector);
-            if(key!=null){
+            if (key != null) {
                 key.cancel();
                 map.remove(key);
             }
             selector.wakeup();
-        }
-    }
-
-
-    static class IoProviderThreadFactory implements ThreadFactory {
-        private final ThreadGroup group;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-        private final String namePrefix;
-
-        IoProviderThreadFactory(String namePrefix) {
-            SecurityManager s = System.getSecurityManager();
-            this.group = (s != null) ? s.getThreadGroup() :
-                    Thread.currentThread().getThreadGroup();
-            this.namePrefix = namePrefix;
-        }
-
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r,
-                    namePrefix + threadNumber.getAndIncrement(),
-                    0);
-            if (t.isDaemon())
-                t.setDaemon(false);
-            if (t.getPriority() != Thread.NORM_PRIORITY)
-                t.setPriority(Thread.NORM_PRIORITY);
-            return t;
         }
     }
 }
