@@ -3,13 +3,13 @@ package cn.buptleida.nio.core;
 import cn.buptleida.nio.impl.ioSelectorProvider;
 
 public class ioContext {
-    private static ioSelectorProvider ioSelector;
+    private static ioProvider ioSelector;
 
-    public static ioSelectorProvider getIoSelector() {
+    public static ioProvider getIoSelector() {
         return ioSelector;
     }
 
-    public static void setIoSelector(ioSelectorProvider ioSelector) {
+    public static void setIoSelector(ioProvider ioSelector) {
         ioContext.ioSelector = ioSelector;
     }
 

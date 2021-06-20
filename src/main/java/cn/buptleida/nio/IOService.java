@@ -60,7 +60,6 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
      * @throws IOException
      */
     public void InitIOSelector() throws IOException {
-
         ioContext.setIoSelector(new ioSelectorProvider());
     }
 
@@ -148,11 +147,9 @@ public class IOService implements ClientHandler.ClientHandlerCallBack {
                             // synchronized (SvrFrame.this){
                             //     clientHandlerList.add(clientHandle);
                             // }
+                            clientHandlerList.add(clientHandler);
                         }
                     }
-
-
-
                 } while (!done);
             } catch (Exception e) {
                 if (!done) {

@@ -4,6 +4,7 @@ import cn.buptleida.conf.CommandMapFactory;
 import cn.buptleida.database.RedisServer;
 import cn.buptleida.netty.Server;
 import cn.buptleida.nio.IOService;
+import cn.buptleida.nio.IOServiceSingle;
 import cn.buptleida.persistence.AOF;
 
 import java.io.IOException;
@@ -17,29 +18,28 @@ public class SvrFrame {
         //AOF启动
         aofInit();
         //初始化IO模块
-        initNetwork(args[0],Integer.parseInt(args[1]));
+        //initNetwork(args[0],Integer.parseInt(args[1]));
+        //初始化单线程模型IO模块
+        initSingleNetwork(args[0],Integer.parseInt(args[1]));
         //初始化netty模块
         // initNetty(Integer.parseInt(args[1]));
     }
 
     /**
-     * 初始化IO模块
+     * 初始化主从reactor模式的IO模块
      * @param ConfigIp
      * @param ConfigPort
      */
     private static void initNetwork(String ConfigIp,int ConfigPort){
         System.out.println(ConfigIp+":"+ConfigPort);
-
         IOService ioService = new IOService(ConfigIp, ConfigPort);
-
         try {
             ioService.InitIOSelector();// 开启输入输出selector线程，开启读写单例线程池
-            ioService.InitSocket();// 开启accept线程，监听客户端连接
+            ioService.InitSocket();// 开启socket
         } catch (IOException e) {
             System.out.println("xxxxxxxxxxxxxxxxxxx Init SERVER FAILED xxxxxxxxxxxxxxxxxxxxx");
         }
-
-        ioService.start();
+        ioService.start();// 开启accept线程，监听客户端连接
     }
 
     /**
@@ -48,6 +48,22 @@ public class SvrFrame {
      */
     private static void initNetty(int ConfigPort){
         new Server(ConfigPort).run();
+    }
+
+    /**
+     * 单线程模型IO模块
+     * @param ConfigIp
+     * @param ConfigPort
+     */
+    private static void initSingleNetwork(String ConfigIp,int ConfigPort){
+        System.out.println(ConfigIp+":"+ConfigPort);
+        IOServiceSingle ioService = new IOServiceSingle(ConfigIp, ConfigPort);
+        try {
+            ioService.InitSocket();// 开启socket
+        } catch (IOException e) {
+            System.out.println("xxxxxxxxxxxxxxxxxxx Init SERVER FAILED xxxxxxxxxxxxxxxxxxxxx");
+        }
+        ioService.start();
     }
 
     /**

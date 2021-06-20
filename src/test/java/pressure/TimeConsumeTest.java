@@ -5,6 +5,7 @@ package pressure;
 // import dar.nio.IOClient;
 import cn.buptleida.nio.IOClient;
 import cn.buptleida.nio.core.ioContext;
+import cn.buptleida.nio.impl.SingleIOSelectorProvider;
 import cn.buptleida.nio.impl.ioSelectorProvider;
 import org.junit.jupiter.api.Test;
 import redis.clients.jedis.Jedis;
@@ -23,7 +24,8 @@ public class TimeConsumeTest {
     public void GetTest() throws IOException {
         System.out.println("--------------开始daredis的GET测试----------------");
         long start,end;
-        ioContext.setIoSelector(new ioSelectorProvider());
+        //ioContext.setIoSelector(new ioSelectorProvider());
+        //ioContext.setIoSelector(new SingleIOSelectorProvider());
 
         String ServerIp = "127.0.0.1";
         int ServerPort = 8008;
@@ -33,6 +35,7 @@ public class TimeConsumeTest {
         try {
             //CountDownLatch latch = new CountDownLatch(10000);
             IOClient connector = IOClient.startWith(ServerIp,ServerPort);
+            //IOClient connector = IOClient.startWithSingle(ServerIp,ServerPort);
             // String name = "name"+System.currentTimeMillis();
             // System.out.println(name);
             // String str = readStrFromFile(name);
@@ -42,13 +45,13 @@ public class TimeConsumeTest {
             // System.out.println("插入耗时："+(end-start));
             String name = "age";
             start = System.currentTimeMillis();
-            for(int i=0;i<1000;++i){
+            for(int i=0;i<100000;++i){
                 connector.sendMsg("GET "+name);
             }
             //latch.await();
             end = System.currentTimeMillis();
             System.out.println("查询耗时："+(end-start));
-            System.out.println("QPS："+1000/((float)(end-start)/1000));
+            System.out.println("QPS："+100000/((float)(end-start)/1000));
             connector.close();
         }catch (Exception e){
             System.out.println("连接失败，退出");
@@ -100,7 +103,7 @@ public class TimeConsumeTest {
         }
         end = System.currentTimeMillis();
         System.out.println("查询耗时："+(end-start));
-        System.out.println("QPS："+100000/((float)(end-start)/1000));
+        System.out.println("QPS："+100000/((float)(end-start)/10000));
     }
 
 }

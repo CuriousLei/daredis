@@ -11,6 +11,8 @@ public interface ioProvider {
 
     void unRegisterOutput(SocketChannel channel);
 
+    void close();
+
     abstract class InputHandler implements Runnable {
 
         @Override
@@ -22,21 +24,6 @@ public interface ioProvider {
     }
 
     abstract class OutputHandler implements Runnable {
-        // Object attach;
-        // public final void setAttach(Object attach) {
-        //     this.attach = attach;
-        // }
-        //
-        // public final <T> T getAttach() {
-        //     return (T) this.attach;
-        // }
-
-        // @Override
-        // public final void run() {
-        //     handle(attach);
-        // }
-        //
-        // protected abstract void handle(Object attach);
         @Override
         public final void run() {
             handle();
