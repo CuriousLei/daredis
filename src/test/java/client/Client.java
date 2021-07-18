@@ -39,14 +39,13 @@ public class Client {
 
 
         for(;;){
-            String str = bufferedReader.readLine();//从键盘输入获取内容
+            String line = bufferedReader.readLine();//从键盘输入获取内容
 
-            if(str.equalsIgnoreCase("exit")){
+            if(line.equalsIgnoreCase("exit")){
                 break;
             }
-            connector.send(str);
+            connector.send(line.split(" "));
         }
         System.out.println("输出流关闭");
     }
-
 }

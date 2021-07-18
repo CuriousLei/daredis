@@ -6,3 +6,4 @@ SELECT,select,2,r,3,int
 KEYS,KEYS,2,r,1,String
 HLEN,hLen,2,r,0,null
 HDEL,hDel,3,w,0,String
+DEL,DEL,2,w,1,String

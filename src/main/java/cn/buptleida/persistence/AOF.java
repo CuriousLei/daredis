@@ -38,7 +38,6 @@ public class AOF {
                 if (strLen != str.length()) throw EXCEPTION;
                 command[i] = str;
             }
-            // RedisServer.INSTANCE.commandExecute(fakeClient, command);
             RedisServer.INSTANCE.commandExecuteProxy(fakeClient, command);
         }
         reader.close();

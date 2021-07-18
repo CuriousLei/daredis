@@ -30,7 +30,7 @@ public class IOClient extends Connector {
         setup(socketChannel);
         this.clientSendReceiver = clientSendReceiver;
     }
-    public String sendMsg(String msg) {
+    public String sendMsg(String... msg) {
         this.send(msg);
         for(;;){
             if(onRecieve.get()) break;
@@ -46,6 +46,15 @@ public class IOClient extends Connector {
         //输出收到的消息
         //System.out.println("接收到："+msg);
         res = msg;
+        onRecieve.set(true);
+    }
+
+    @Override
+    protected void onReceiveFromCore(String[] msg) {
+        super.onReceiveFromCore(msg);
+        //输出收到的消息
+        //System.out.println("接收到："+msg);
+        res = msg[0];
         onRecieve.set(true);
     }
 

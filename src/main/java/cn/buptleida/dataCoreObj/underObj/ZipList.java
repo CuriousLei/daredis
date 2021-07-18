@@ -12,6 +12,9 @@ public class ZipList implements RedisObj {
 
     private byte[] elementData;
 
+    public byte[] getElementData() {
+        return elementData;
+    }
 
     public ZipList() {
         elementData = new byte[11];
@@ -20,6 +23,10 @@ public class ZipList implements RedisObj {
         writeInt(elementData, 0, 8, IntEnc.INT_16.LEN());
         writeInt(elementData, 255, 10, IntEnc.INT_8.LEN());
         elementData[10] = (byte) 255;
+    }
+
+    public ZipList(byte[] elementData) {
+        this.elementData = elementData;
     }
 
     /**
@@ -245,16 +252,6 @@ public class ZipList implements RedisObj {
                     delete(entry);
                     continue;
                 }
-                // if (arr.length == itemArr.length) {
-                //     int j;
-                //     for (j = 0; j < arr.length; ++j) {
-                //         if (arr[j] != itemArr[j]) break;
-                //     }
-                //     if (j == arr.length) {
-                //         delete(pos, entry);
-                //         continue;
-                //     }
-                // }
             }
             pos += entry.size();
         }
@@ -471,8 +468,7 @@ public class ZipList implements RedisObj {
      * 根据entry获取结点值（字节数组）
      */
     public byte[] getNodeVal_ByteArr(zlentry entry) {
-        byte[] arr = Arrays.copyOfRange(elementData, entry.contentPos, entry.contentPos + entry.contentSize);
-        return arr;
+        return Arrays.copyOfRange(elementData, entry.contentPos, entry.contentPos + entry.contentSize);
     }
 
     /**
@@ -496,7 +492,7 @@ public class ZipList implements RedisObj {
             pos += entry.size();
         }
         for (; pos <= tail; pos += entry.size()) {
-            if((entry = getEntry(pos))==null) return null;
+            if ((entry = getEntry(pos)) == null) return null;
             flag = -flag;
             if (flag > 0) continue;
             byte[] element = getNodeVal_ByteArr(entry);
@@ -521,5 +517,13 @@ public class ZipList implements RedisObj {
             preSize = (int) readInt(elementData, pos, 1);
         }
         return pos - preSize;
+    }
+
+    /**
+     * 获取首结点
+     * @return entry
+     */
+    public zlentry getFirstEntry() {
+        return getEntry(10);
     }
 }

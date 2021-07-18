@@ -40,13 +40,12 @@ public enum RedisServer {
      */
     public String commandExecute(RedisClient client, String commandStr) throws Exception {
         String[] command = commandStr.split(" ");
-        // return commandExecute(client, command);
         commandExecuteProxy(client, command);
         return null;
     }
 
     public String commandExecute(RedisClient client, String[] command) throws Exception {
-
+        System.out.println(Arrays.toString(command));
         String commandName = command[0];
         String[] params = Arrays.copyOfRange(command, 1, command.length);
         if (commandName.equalsIgnoreCase("select")) {

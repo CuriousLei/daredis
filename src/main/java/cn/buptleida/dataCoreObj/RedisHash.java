@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets;
 
 
 public class RedisHash extends RedisObject implements CmdExecutor {
-    public RedisHash(){
+    public RedisHash() {
         this.type = RedisType.HASH.VAL();
         this.encoding = RedisEnc.ZIPLIST.VAL();
         this.ptr = new ZipList();
@@ -29,35 +29,36 @@ public class RedisHash extends RedisObject implements CmdExecutor {
 
     /**
      * 插入键值对
+     *
      * @param key 全当字符串来处理
      * @param val 可能是字符串，可能是整型数字
      */
-    public void hSet(String key, String val){
-        if(MathUtil.isNumeric(val)) hSet(key,Long.parseLong(val));
-        else{
-            if(encoding == RedisEnc.ZIPLIST.VAL()){
+    public void hSet(String key, String val) {
+        if (MathUtil.isNumeric(val)) hSet(key, Long.parseLong(val));
+        else {
+            if (encoding == RedisEnc.ZIPLIST.VAL()) {
                 ZipList zipList = (ZipList) ptr;
                 byte[] keyBytes = key.getBytes(StandardCharsets.UTF_16BE);
                 byte[] valBytes = val.getBytes(StandardCharsets.UTF_16BE);
 
                 zlentry entry;
-                int update=0;
+                int update = 0;
                 //如果key已存在，则更新对应的val
-                if((entry = zipList.exist(keyBytes,1))!=null){
+                if ((entry = zipList.exist(keyBytes, 1)) != null) {
                     int valPos = entry.endPos();
                     zipList.delete(valPos);
                     zipList.insertAfter(entry, valBytes);
                     update = 1;
                 }
                 //没有执行更新操作，则进行push
-                if(update == 0){
-                    zipList.push(keyBytes,1);
-                    zipList.push(valBytes,1);
+                if (update == 0) {
+                    zipList.push(keyBytes, 1);
+                    zipList.push(valBytes, 1);
                 }
 
                 checkVary(Math.max(keyBytes.length, valBytes.length));
-            }else{
-                Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
+            } else {
+                Dict<SDS, SDS> dict = (Dict<SDS, SDS>) ptr;
                 SDS keySDS = new SDS(key.toCharArray());
                 SDS valSDS = new SDS(val.toCharArray());
                 dict.put(keySDS, valSDS);
@@ -65,113 +66,117 @@ public class RedisHash extends RedisObject implements CmdExecutor {
         }
     }
 
-    public void hSet(String key, long val){
-        if(encoding == RedisEnc.ZIPLIST.VAL()){
+    public void hSet(String key, long val) {
+        if (encoding == RedisEnc.ZIPLIST.VAL()) {
             ZipList zipList = (ZipList) ptr;
             byte[] keyBytes = key.getBytes(StandardCharsets.UTF_16BE);
 
             zlentry entry;
-            int update=0;
+            int update = 0;
             //如果key已存在，则更新对应的val
-            if((entry = zipList.exist(keyBytes,1))!=null){
+            if ((entry = zipList.exist(keyBytes, 1)) != null) {
                 int valPos = entry.endPos();
                 zipList.delete(valPos);
                 zipList.insertAfter(entry, val);
                 update = 1;
             }
             //没有执行更新操作，则进行push
-            if(update == 0){
-                zipList.push(keyBytes,1);
-                zipList.push(val,1);
+            if (update == 0) {
+                zipList.push(keyBytes, 1);
+                zipList.push(val, 1);
             }
 
             checkVary(keyBytes.length);
-        }else{
-            Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
+        } else {
+            Dict<SDS, SDS> dict = (Dict<SDS, SDS>) ptr;
             SDS keySDS = new SDS(key.toCharArray());
             SDS valSDS = new SDS(Long.toString(val).toCharArray());
             dict.put(keySDS, valSDS);
         }
     }
+
     /**
      * 根据键查找值
      */
-    public String hGet(String key){
+    public String hGet(String key) {
         if (encoding == RedisEnc.ZIPLIST.VAL()) {
             ZipList zipList = (ZipList) ptr;
             zlentry keyEntry;
-            if((keyEntry = zipList.exist(key.getBytes(StandardCharsets.UTF_16BE),1))==null)
+            if ((keyEntry = zipList.exist(key.getBytes(StandardCharsets.UTF_16BE), 1)) == null)
                 return null;
             zlentry valEntry = zipList.getNextEntry(keyEntry);
 
             //判断是整数结点还是字节数组结点
-            if(ZipList.isIntVal(valEntry)){
+            if (ZipList.isIntVal(valEntry)) {
                 long val = zipList.getNodeVal_Int(valEntry);
                 return Long.toString(val);
-            }else{
+            } else {
                 byte[] val = zipList.getNodeVal_ByteArr(valEntry);
-                return new String(val,StandardCharsets.UTF_16BE);
+                return new String(val, StandardCharsets.UTF_16BE);
             }
 
-        }else{
-            Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
+        } else {
+            Dict<SDS, SDS> dict = (Dict<SDS, SDS>) ptr;
             SDS keySDS = new SDS(key.toCharArray());
             SDS valSDS = dict.get(keySDS);
             return valSDS.toString();
         }
     }
+
     /**
      * 输入给定键；
      * 查找是否存在该键值对。
      */
-    public boolean hExists(String key){
-        if (encoding == RedisEnc.ZIPLIST.VAL()){
+    public boolean hExists(String key) {
+        if (encoding == RedisEnc.ZIPLIST.VAL()) {
             ZipList zipList = (ZipList) ptr;
             byte[] keyBytes = key.getBytes(StandardCharsets.UTF_16BE);
-            if(zipList.exist(keyBytes,1)==null)
+            if (zipList.exist(keyBytes, 1) == null)
                 return false;
             return true;
         }
 
-        Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
+        Dict<SDS, SDS> dict = (Dict<SDS, SDS>) ptr;
         SDS keySDS = new SDS(key.toCharArray());
         return dict.exist(keySDS);
     }
+
     /**
      * 根据给定键删除对应的键值对
      * 输入：key键；
      * 输出：成功返回1，因键值对不存在删除失败返回0
      */
-    public int hDel(String key){
-        if (encoding == RedisEnc.ZIPLIST.VAL()){
+    public int hDel(String key) {
+        if (encoding == RedisEnc.ZIPLIST.VAL()) {
             ZipList zipList = (ZipList) ptr;
             byte[] keyBytes = key.getBytes(StandardCharsets.UTF_16BE);
             zlentry keyEntry;
-            if((keyEntry=zipList.exist(keyBytes,1))==null)
+            if ((keyEntry = zipList.exist(keyBytes, 1)) == null)
                 return Status.ERROR;
             zlentry valEntry = zipList.getNextEntry(keyEntry);
             zipList.delete(valEntry);
             zipList.delete(keyEntry);
             return Status.SUCCESS;
-        }else{
-            Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
+        } else {
+            Dict<SDS, SDS> dict = (Dict<SDS, SDS>) ptr;
             SDS keySDS = new SDS(key.toCharArray());
 
-            if(dict.delete(keySDS)==null)
+            if (dict.delete(keySDS) == null)
                 return Status.ERROR;
             return Status.SUCCESS;
         }
     }
 
-    public int hLen(){
-        if (encoding == RedisEnc.ZIPLIST.VAL()){
+    public int hLen() {
+        if (encoding == RedisEnc.ZIPLIST.VAL()) {
             ZipList zipList = (ZipList) ptr;
-            return zipList.zlLen()/2;
-        }else{
-            Dict<SDS,SDS> dict = (Dict<SDS,SDS>) ptr;
+            return zipList.zlLen() / 2;
+        } else {
+            Dict<SDS, SDS> dict = (Dict<SDS, SDS>) ptr;
             return dict.dictSize();
         }
     }
+
     /**
      * 传参elementSize：当前添加的结点的长度；
      * 检查是否满足转换条件
@@ -188,15 +193,15 @@ public class RedisHash extends RedisObject implements CmdExecutor {
         }
     }
 
-    private void zipList2Dict(){
-        Dict<SDS,SDS> dict = new Dict<>();
+    private void zipList2Dict() {
+        Dict<SDS, SDS> dict = new Dict<>();
         ZipList zipList = (ZipList) ptr;
-        int len = zipList.zlLen()/2;
+        int len = zipList.zlLen() / 2;
         for (int i = 0, pos = 10; i < len; ++i) {
             zlentry keyEntry = zipList.getEntry(pos);
             zlentry valEntry = zipList.getNextEntry(keyEntry);
 
-            String s = new String(zipList.getNodeVal_ByteArr(keyEntry),StandardCharsets.UTF_16BE);
+            String s = new String(zipList.getNodeVal_ByteArr(keyEntry), StandardCharsets.UTF_16BE);
             SDS keySDS = new SDS(s.toCharArray());
             SDS valSDS;
             //判断结点是整型还是字节数组

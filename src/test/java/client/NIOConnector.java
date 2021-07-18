@@ -21,6 +21,13 @@ public class NIOConnector extends Connector {
     }
 
     @Override
+    protected void onReceiveFromCore(String[] msg) {
+        super.onReceiveFromCore(msg);
+        //输出收到的消息
+        System.out.println(msg[0]);
+    }
+
+    @Override
     public void onChannelClosed(SocketChannel channel) {
         super.onChannelClosed(channel);
         System.out.println("连接已关闭无法读取数据");

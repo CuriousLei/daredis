@@ -57,6 +57,19 @@ public class ClientHandler extends Connector implements RedisClient.RedisClientC
         }
     }
 
+    @Override
+    protected void onReceiveFromCore(String[] msg) {
+        super.onReceiveFromCore(msg);
+        try {
+            if (msg.length > 0 && msg[0].equalsIgnoreCase("exit")) {
+                close();
+            }
+            RedisServer.INSTANCE.commandExecuteProxy(client, msg);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * runnable处理里面异常退出的回调
      */
@@ -72,8 +85,7 @@ public class ClientHandler extends Connector implements RedisClient.RedisClientC
      * @param msg
      */
     private void write(Object msg) {
-        //System.out.println("发送：" + msg);
-        send(msg);
+        send(new String[]{(String) msg});
     }
 
 

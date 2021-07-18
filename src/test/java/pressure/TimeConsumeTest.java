@@ -59,18 +59,7 @@ public class TimeConsumeTest {
         ioContext.close();
     }
 
-    private String readStrFromFile(String name) throws IOException {
-        File file = new File("D:\\Study\\project\\压测\\test.txt");
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        StringBuilder res = new StringBuilder("SET "+name+" ");
-        String line;
-        while((line=reader.readLine())!=null){
-            res.append(line);
-        }
-        reader.close();
-        return res.toString();
 
-    }
 
     @Test
     public void generateFile() throws IOException {

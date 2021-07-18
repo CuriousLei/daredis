@@ -1,6 +1,6 @@
 package cn.buptleida.nio.impl.async;
 
-import cn.buptleida.nio.box.StringReceivePacket;
+import cn.buptleida.nio.box.StringArrayReceivePacket;
 import cn.buptleida.nio.core.ReceiveDispatcher;
 import cn.buptleida.nio.core.ReceivePacket;
 import cn.buptleida.nio.core.Receiver;
@@ -65,12 +65,14 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
 
     /**
      * 解析数据到packet
+     *
      * @param args
      */
     private void assemblePacket(ioArgs args) {
         if (packetTemp == null) {//首包
             int length = args.readLength();//消息体长度
-            packetTemp = new StringReceivePacket(length);
+            //packetTemp = new StringReceivePacket(length);
+            packetTemp = new StringArrayReceivePacket(length);
             //packetTemp.open()是获取一个输出流ByteArrayOutputStream
             channel = Channels.newChannel(packetTemp.open());
 
@@ -125,7 +127,7 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
 
     @Override
     public boolean isNewIoArgs() {
-        return packetTemp==null;
+        return packetTemp == null;
     }
 
     @Override
