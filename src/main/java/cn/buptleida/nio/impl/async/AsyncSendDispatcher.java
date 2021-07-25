@@ -135,7 +135,8 @@ public class AsyncSendDispatcher implements SendDispatcher, cn.buptleida.nio.cor
      * @return
      */
     @Override
-    public ioArgs providerIoArgs() {
+    public ioArgs providerIoArgs(long len) {
+        ioArgs = new ioArgs(len);
         ioArgs args = ioArgs;
         if (channel == null) {
             //首包
@@ -157,10 +158,12 @@ public class AsyncSendDispatcher implements SendDispatcher, cn.buptleida.nio.cor
 
         return args;
     }
+
     @Override
     public boolean isNewIoArgs() {
-        return channel==null;
+        return channel == null;
     }
+
     @Override
     public void onConsumeFailed(ioArgs args, Exception e) {
         e.printStackTrace();
@@ -169,5 +172,10 @@ public class AsyncSendDispatcher implements SendDispatcher, cn.buptleida.nio.cor
     @Override
     public void onConsumeCompleted(ioArgs args) {
         sendCurrentPacket();
+    }
+
+    @Override
+    public long packetLength() {
+        return packetTemp == null ? 0 : packetTemp.length();
     }
 }

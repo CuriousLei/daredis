@@ -17,7 +17,7 @@ public class IOClient extends Connector {
     private ClientSendReceiver clientSendReceiver;
     private String res;
     private final Object lock = new Object();
-    private final AtomicBoolean onRecieve = new AtomicBoolean(false);
+    private final AtomicBoolean onReceive = new AtomicBoolean(false);
     private CountDownLatch latch;
     IOClient(SocketChannel socketChannel, CountDownLatch latch) throws IOException{
         setup(socketChannel);
@@ -33,9 +33,10 @@ public class IOClient extends Connector {
     public String sendMsg(String... msg) {
         this.send(msg);
         for(;;){
-            if(onRecieve.get()) break;
+            if(onReceive.get()) break;
         }
-        onRecieve.set(false);
+
+        onReceive.set(false);
         // return res;
         return res;
     }
@@ -46,7 +47,7 @@ public class IOClient extends Connector {
         //输出收到的消息
         //System.out.println("接收到："+msg);
         res = msg;
-        onRecieve.set(true);
+        onReceive.set(true);
     }
 
     @Override
@@ -55,7 +56,7 @@ public class IOClient extends Connector {
         //输出收到的消息
         //System.out.println("接收到："+msg);
         res = msg[0];
-        onRecieve.set(true);
+        onReceive.set(true);
     }
 
     @Override
@@ -79,7 +80,6 @@ public class IOClient extends Connector {
     }
     public static IOClient startWith(String serverIp, int serverPort) throws IOException {
         ioContext.setIoSelector(new ioSelectorProvider());
-        //ioContext.setIoSelector(new SingleIOSelectorProvider());
 
         SocketChannel socketChannel = SocketChannel.open();
         socketChannel.connect(new InetSocketAddress(InetAddress.getByName(serverIp), serverPort));

@@ -1,10 +1,8 @@
 package cn.buptleida.database;
 
 import cn.buptleida.conf.Command;
-import cn.buptleida.dataCoreObj.base.CmdExecutor;
-import cn.buptleida.nio.clihdl.ClientHandler;
+import cn.buptleida.structure.base.CmdExecutor;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class RedisClient implements CmdExecutor {

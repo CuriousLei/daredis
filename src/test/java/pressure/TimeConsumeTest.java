@@ -34,8 +34,8 @@ public class TimeConsumeTest {
 
         try {
             //CountDownLatch latch = new CountDownLatch(10000);
-            IOClient connector = IOClient.startWith(ServerIp,ServerPort);
-            //IOClient connector = IOClient.startWithSingle(ServerIp,ServerPort);
+            //IOClient connector = IOClient.startWith(ServerIp,ServerPort);
+            IOClient connector = IOClient.startWithSingle(ServerIp,ServerPort);
             // String name = "name"+System.currentTimeMillis();
             // System.out.println(name);
             // String str = readStrFromFile(name);
@@ -43,10 +43,10 @@ public class TimeConsumeTest {
             // connector.sendMsg(str);
             // end = System.currentTimeMillis();
             // System.out.println("插入耗时："+(end-start));
-            String name = "age";
+            String name = "name";
             start = System.currentTimeMillis();
             for(int i=0;i<100000;++i){
-                connector.sendMsg("GET "+name);
+                connector.sendMsg("GET",name);
             }
             //latch.await();
             end = System.currentTimeMillis();

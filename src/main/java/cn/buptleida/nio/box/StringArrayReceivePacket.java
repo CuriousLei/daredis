@@ -1,11 +1,9 @@
 package cn.buptleida.nio.box;
 
-import cn.buptleida.dataCoreObj.underObj.ZipList;
-import cn.buptleida.dataCoreObj.underObj.zlentry;
+import cn.buptleida.structure.underlie.ZipList;
+import cn.buptleida.structure.underlie.zlentry;
 import cn.buptleida.nio.core.ReceivePacket;
-import com.sun.xml.internal.fastinfoset.util.StringArray;
 
-import javax.transaction.xa.Xid;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

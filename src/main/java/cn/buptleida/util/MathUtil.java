@@ -17,4 +17,30 @@ public class MathUtil {
             return true;
         return false;
     }
+
+    /**
+     * 取比number大的最小的2的幂
+     * @param number 数字
+     * @param maxCapacity 上限
+     * @return 比目标数字大的最小的2的幂
+     */
+    public static long roundUpToPowerOf2(long number, long maxCapacity) {
+        long rounded = number >= maxCapacity
+                ? maxCapacity
+                : (rounded = Long.highestOneBit(number)) != 0
+                ? (Long.bitCount(number) > 1) ? rounded << 1 : rounded
+                : 1;
+
+        return rounded;
+    }
+
+    public static int roundUpToPowerOf2(int number, int maxCapacity) {
+        int rounded = number >= maxCapacity
+                ? maxCapacity
+                : (rounded = Integer.highestOneBit(number)) != 0
+                ? (Integer.bitCount(number) > 1) ? rounded << 1 : rounded
+                : 1;
+
+        return rounded;
+    }
 }

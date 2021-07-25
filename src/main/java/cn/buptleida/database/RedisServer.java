@@ -3,8 +3,7 @@ package cn.buptleida.database;
 import cn.buptleida.conf.Command;
 import cn.buptleida.conf.CommandMapFactory;
 import cn.buptleida.conf.Toast;
-import cn.buptleida.dataCoreObj.base.CmdExecutor;
-import cn.buptleida.dataCoreObj.base.RedisObject;
+import cn.buptleida.structure.base.CmdExecutor;
 
 import java.io.IOException;
 import java.lang.reflect.Method;

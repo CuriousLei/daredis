@@ -111,7 +111,8 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
 
     //下面三个方法实现ioArgs中的接口IoArgsEventProcessor
     @Override
-    public ioArgs providerIoArgs() {
+    public ioArgs providerIoArgs(long len) {
+        this.args = new ioArgs(len);
         ioArgs args = this.args;
         int receiveSize;
         if (packetTemp == null) {
@@ -141,4 +142,8 @@ public class AsyncReceiveDispatcher implements ReceiveDispatcher, ioArgs.IoArgsE
         // registerReceive();// 如果不是首包，且数据未读取完，继续注册receive
     }
 
+    @Override
+    public long packetLength() {
+        return packetTemp == null ? 0 : packetTemp.length();
+    }
 }

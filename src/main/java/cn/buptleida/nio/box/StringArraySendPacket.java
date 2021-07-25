@@ -1,6 +1,6 @@
 package cn.buptleida.nio.box;
 
-import cn.buptleida.dataCoreObj.underObj.ZipList;
+import cn.buptleida.structure.underlie.ZipList;
 import cn.buptleida.nio.core.SendPacket;
 
 import java.io.ByteArrayInputStream;

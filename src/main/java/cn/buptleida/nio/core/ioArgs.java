@@ -1,5 +1,7 @@
 package cn.buptleida.nio.core;
 
+import cn.buptleida.util.MathUtil;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -8,11 +10,20 @@ import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 
 public class ioArgs {
-    private int limit = 256;
-    private byte[] byteBuffer = new byte[256];
-    private ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
+    private int limit;
+    private ByteBuffer buffer;
     // private final ByteBuffer buffer = ByteBuffer.allocateDirect(256);
     private String srcUid;
+
+    public ioArgs() {
+        new ioArgs(256);
+    }
+
+    public ioArgs(long len) {
+        int size = (int) MathUtil.roundUpToPowerOf2(len, 1 << 20);
+        this.limit = size;
+        this.buffer = ByteBuffer.wrap(new byte[size]);
+    }
 
     public int read(SocketChannel channel) throws IOException {
         buffer.clear();
@@ -25,11 +36,13 @@ public class ioArgs {
 
     /**
      * 获取容量
+     *
      * @return
      */
-    public int capacity(){
+    public int capacity() {
         return buffer.capacity();
     }
+
     /**
      * 从bytes中读到buffer
      *
@@ -141,9 +154,10 @@ public class ioArgs {
 
     /**
      * 获取消息体的长度
+     *
      * @return
      */
-    public int readLength(){
+    public int readLength() {
         //读取内部position开始的四个字节以int值返回，即获取首部
         return buffer.getInt();
     }
@@ -164,23 +178,23 @@ public class ioArgs {
         this.limit = limit;
     }
 
-    // public interface IoArgsEventListener{
-    //     void onStarted(ioArgs args);
-    //
-    //     void onCompleted(ioArgs args);
-    // }
-
     /**
      * 消费状态的回调
      */
-    public interface IoArgsEventProcessor{
+    public interface IoArgsEventProcessor {
         /**
          * 提供一份可消费的IoArgs
+         *
          * @return
          */
-        ioArgs providerIoArgs();
+        ioArgs providerIoArgs(long len);
+
         boolean isNewIoArgs();
+
         void onConsumeFailed(ioArgs args, Exception e);
+
         void onConsumeCompleted(ioArgs args);
+
+        long packetLength();
     }
 }
